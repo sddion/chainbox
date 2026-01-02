@@ -1,0 +1,17 @@
+# Source TypeScript files (we publish compiled JS in dist/)
+*.ts
+!*.d.ts
+
+# Config files
+tsconfig.json
+.npmrc
+
+# Environment
+.env*
+
+# Dependencies (npm installs these automatically)
+node_modules/
+
+# Git files
+.git/
+.gitignore
