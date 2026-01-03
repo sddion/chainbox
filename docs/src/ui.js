@@ -17,10 +17,15 @@ const SIDEBAR_ORDER = [
 
 // --- 1. Pagination ---
 function injectPagination() {
-    const currentPath = window.location.pathname.split('/').pop();
-    const currentIndex = SIDEBAR_ORDER.findIndex(item => currentPath.endsWith(item.url));
+    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
 
-    if (currentIndex === -1) return;
+    // Normalize matching by checking if item.url ends with the current filename
+    const currentIndex = SIDEBAR_ORDER.findIndex(item => item.url.endsWith(currentPath));
+
+    if (currentIndex === -1) {
+        console.warn("Pagination: Current page not found in SIDEBAR_ORDER", currentPath);
+        return;
+    }
 
     const prev = SIDEBAR_ORDER[currentIndex - 1];
     const next = SIDEBAR_ORDER[currentIndex + 1];

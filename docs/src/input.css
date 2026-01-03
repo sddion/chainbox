@@ -69,7 +69,12 @@
     }
 
     & pre {
-        @apply bg-bg-alt border border-white/10 rounded-lg p-4 overflow-x-auto mb-6 max-w-[calc(100vw-3rem)];
+        @apply bg-bg-alt border border-white/10 rounded-lg p-4 overflow-x-auto mb-6 max-w-[calc(100vw-3rem)] md:max-w-none;
+    }
+
+    /* Target the wrapper divs directly if they are used */
+    & .bg-bg-alt.border.rounded-lg {
+        @apply max-w-[calc(100vw-3rem)] md:max-w-none overflow-x-auto;
     }
 
     & pre code {
