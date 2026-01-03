@@ -27,10 +27,25 @@
                     <span>Search</span>
                     <span class="text-xs bg-white/10 px-1.5 py-0.5 rounded border border-white/5">Ctrl K</span>
                 </button>
-                <div class="flex items-center gap-6 text-sm font-medium text-gray-400">
+                <div class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-400">
                     <a href="getting-started.html" class="text-white">Guide</a>
                     <a href="https://github.com/sddion/chainbox" target="_blank" class="hover:text-white transition-colors">GitHub</a>
                 </div>
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-trigger" class="md:hidden p-2 text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+            <!-- Mobile Menu Overlay -->
+            <div id="mobile-menu" class="hidden fixed inset-0 z-60 bg-bg/95 backdrop-blur-xl pt-24 px-6">
+                <button id="mobile-menu-close" class="absolute top-6 right-6 text-gray-400 hover:text-white">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <nav class="flex flex-col gap-8 text-xl font-medium text-center">
+                    <a href="getting-started.html" class="text-white hover:text-brand transition-colors">Guide</a>
+                    <a href="https://github.com/sddion/chainbox" target="_blank" class="text-white hover:text-brand transition-colors">GitHub</a>
+                </nav>
+            </div>
             </div>
         </div>
     </nav>

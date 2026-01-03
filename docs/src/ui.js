@@ -1,5 +1,5 @@
 /**
- * UI Enhancements: Pagination, Table of Contents, Tabs
+ * UI Enhancements: Pagination, Table of Contents, Tabs, Mobile Menu
  */
 
 // --- Configuration ---
@@ -65,7 +65,7 @@ function generateTOC() {
 
     const headings = document.querySelectorAll('article h2, article h3');
     if (headings.length === 0) {
-        tocContainer.parentElement.removeChild(tocContainer); // Remove if no headings
+        if (tocContainer.parentElement) tocContainer.parentElement.removeChild(tocContainer);
         return;
     }
 
@@ -154,9 +154,29 @@ function initTabs() {
     });
 }
 
+// --- 4. Mobile Menu Toggle ---
+function initMobileMenu() {
+    const trigger = document.getElementById('mobile-menu-trigger');
+    const close = document.getElementById('mobile-menu-close');
+    const menu = document.getElementById('mobile-menu');
+
+    if (!trigger || !close || !menu) return;
+
+    trigger.addEventListener('click', () => {
+        menu.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    });
+
+    close.addEventListener('click', () => {
+        menu.classList.add('hidden');
+        document.body.style.overflow = '';
+    });
+}
+
 // --- Init ---
 document.addEventListener('DOMContentLoaded', () => {
     injectPagination();
     generateTOC();
     initTabs();
+    initMobileMenu();
 });

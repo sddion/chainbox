@@ -17,6 +17,10 @@
 
 /* Global Styles */
 @layer base {
+    html {
+        @apply overflow-x-hidden;
+    }
+
     body {
         @apply bg-bg text-gray-300 font-sans antialiased overflow-x-hidden;
     }
@@ -61,7 +65,7 @@
     }
 
     & code {
-        @apply font-mono text-sm text-brand-light bg-brand/10 px-1.5 py-0.5 rounded break-all;
+        @apply font-mono text-sm text-brand-light bg-brand/10 px-1.5 py-0.5 rounded break-words whitespace-normal;
     }
 
     & pre {
