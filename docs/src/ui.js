@@ -12,7 +12,7 @@ const SIDEBAR_ORDER = [
     { title: "Security", url: "security.html", path: "guide/security.html" },
     { title: "Supabase Adapter", url: "supabase-adapter.html", path: "guide/supabase-adapter.html" },
     { title: "FAQ", url: "faq.html", path: "guide/faq.html" },
-    { title: "Capabilities", url: "../reference/capabilities.html", path: "reference/capabilities.html" } // specific handling maybe needed
+    { title: "Capabilities", url: "../reference/capabilities.html", path: "reference/capabilities.html" }
 ];
 
 // --- 1. Pagination ---
@@ -28,14 +28,14 @@ function injectPagination() {
     const container = document.getElementById('pagination-container');
     if (!container) return;
 
-    let html = '<div class="flex justify-between items-center mt-12 pt-8 border-t border-white/5">';
+    let html = '<div class="flex justify-between items-center mt-16 pt-8 border-t border-white/5">';
 
     // Previous Link
     if (prev) {
         html += `
             <a href="${prev.url}" class="group flex flex-col gap-1 text-sm text-gray-400 hover:text-white transition-colors">
-                <span class="text-xs text-gray-500">Previous</span>
-                <span class="font-medium text-brand group-hover:text-brand-light">← ${prev.title}</span>
+                <span class="text-xs text-gray-500 font-medium">Previous</span>
+                <span class="font-medium text-brand group-hover:text-brand-light transition-colors">← ${prev.title}</span>
             </a>
         `;
     } else {
@@ -46,8 +46,8 @@ function injectPagination() {
     if (next) {
         html += `
             <a href="${next.url}" class="group flex flex-col gap-1 text-sm text-gray-400 hover:text-white text-right transition-colors">
-                <span class="text-xs text-gray-500">Next</span>
-                <span class="font-medium text-brand group-hover:text-brand-light">${next.title} →</span>
+                <span class="text-xs text-gray-500 font-medium">Next</span>
+                <span class="font-medium text-brand group-hover:text-brand-light transition-colors">${next.title} →</span>
             </a>
         `;
     } else {
@@ -64,12 +64,16 @@ function generateTOC() {
     if (!tocContainer) return;
 
     const headings = document.querySelectorAll('article h2, article h3');
-    if (headings.length === 0) return;
+    if (headings.length === 0) {
+        tocContainer.parentElement.removeChild(tocContainer); // Remove if no headings
+        return;
+    }
 
+    // Use Sticky positioning relative to the container
     let html = `
-        <div class="fixed w-64 hidden xl:block pl-8 border-l border-white/5 right-6 top-24 h-[calc(100vh-6rem)] overflow-y-auto">
+        <div class="sticky top-24 w-64 hidden xl:block pl-6 ml-6 border-l border-white/5 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar">
             <h5 class="text-xs font-bold text-white uppercase tracking-wider mb-4">On this page</h5>
-            <ul class="space-y-3 text-sm">
+            <ul class="space-y-2.5 text-sm">
     `;
 
     headings.forEach((heading, index) => {
@@ -77,12 +81,12 @@ function generateTOC() {
         heading.id = id;
 
         const isH3 = heading.tagName === 'H3';
-        const indentClass = isH3 ? 'pl-4' : '';
-        const activeClass = index === 0 ? 'text-brand' : 'text-gray-500 hover:text-gray-300';
+        const indentClass = isH3 ? 'pl-4 border-l border-white/5' : '';
+        const activeClass = 'text-gray-500 hover:text-gray-300 transition-colors duration-200';
 
         html += `
             <li class="${indentClass}">
-                <a href="#${id}" class="block transition-colors ${activeClass}">${heading.innerText}</a>
+                <a href="#${id}" class="block py-0.5 ${activeClass}" data-target="${id}">${heading.innerText}</a>
             </li>
         `;
     });
@@ -93,11 +97,30 @@ function generateTOC() {
     `;
 
     tocContainer.innerHTML = html;
+
+    // ScrollSpy Logic
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.id;
+                document.querySelectorAll('#toc-container a').forEach(link => {
+                    link.classList.remove('text-brand', 'font-medium');
+                    link.classList.add('text-gray-500');
+                    if (link.dataset.target === id) {
+                        link.classList.remove('text-gray-500');
+                        link.classList.add('text-brand', 'font-medium');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: '-10% 0px -80% 0px' });
+
+    headings.forEach(h => observer.observe(h));
 }
 
 // --- 3. Code Tabs (npm, pnpm, yarn) ---
 function initTabs() {
-    const tabGroups = document.querySelectorAll('.code-tabs'); // We will add this class to HTML
+    const tabGroups = document.querySelectorAll('.code-tabs');
 
     tabGroups.forEach(group => {
         const buttons = group.querySelectorAll('button[data-tab]');
