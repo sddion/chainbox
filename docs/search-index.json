@@ -1,0 +1,103 @@
+[
+  {
+    "url": "index.html",
+    "title": "Chainbox",
+    "content": " Chainbox",
+    "headings": []
+  },
+  {
+    "url": "guide/getting-started.html",
+    "title": "Getting Started",
+    "content": "Getting Started Installation Quick Start Getting Started",
+    "headings": [
+      "Getting Started",
+      "Installation",
+      "Quick Start"
+    ]
+  },
+  {
+    "url": "guide/core-concepts.html",
+    "title": "Core Concepts",
+    "content": "Core Concepts Capabilities No API Layer The Call() Function Core Concepts",
+    "headings": [
+      "Core Concepts",
+      "Capabilities",
+      "No API Layer",
+      "The Call() Function"
+    ]
+  },
+  {
+    "url": "guide/execution-context.html",
+    "title": "Execution Context",
+    "content": "Execution Context Structure Storage Adapters Usage Execution Context",
+    "headings": [
+      "Execution Context",
+      "Structure",
+      "Storage Adapters",
+      "Usage"
+    ]
+  },
+  {
+    "url": "guide/capability-chaining.html",
+    "title": "Capability Chaining",
+    "content": "Server-Side Composition Sequential Composition Parallel Execution Capability Chaining",
+    "headings": [
+      "Server-Side Composition",
+      "Sequential Composition",
+      "Parallel Execution"
+    ]
+  },
+  {
+    "url": "guide/error-handling.html",
+    "title": "Error Handling",
+    "content": "Error Handling Throwing Errors Client-Side Handling Custom Error Types Error Handling",
+    "headings": [
+      "Error Handling",
+      "Throwing Errors",
+      "Client-Side Handling",
+      "Custom Error Types"
+    ]
+  },
+  {
+    "url": "guide/security.html",
+    "title": "Security",
+    "content": "Security Model Authorization Error Handling Security",
+    "headings": [
+      "Security Model",
+      "Authorization",
+      "Error Handling"
+    ]
+  },
+  {
+    "url": "guide/supabase-adapter.html",
+    "title": "Supabase Adapter",
+    "content": "Supabase Adapter Setup Usage in Capabilities Row Level Security (RLS) Supabase Adapter",
+    "headings": [
+      "Supabase Adapter",
+      "Setup",
+      "Usage in Capabilities",
+      "Row Level Security (RLS)"
+    ]
+  },
+  {
+    "url": "guide/faq.html",
+    "title": "FAQ",
+    "content": "FAQ Is this a replacement for REST? How does it handle file uploads? Can I use it with React/Vue/Svelte? FAQ",
+    "headings": [
+      "FAQ",
+      "Is this a replacement for REST?",
+      "How does it handle file uploads?",
+      "Can I use it with React/Vue/Svelte?"
+    ]
+  },
+  {
+    "url": "reference/capabilities.html",
+    "title": "Capability Reference",
+    "content": "Capability Reference Client Server Capability Reference",
+    "headings": [
+      "Capability Reference",
+      "Client",
+      "Server"
+    ]
+  }
+]

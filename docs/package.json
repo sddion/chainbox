@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "build": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --minify",
+        "build:search": "node scripts/build-search.mjs",
+        "build": "npm run build:search && npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --minify",
         "dev": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --watch"
     },
     "devDependencies": {

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Adapter - Chainbox Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="../dist/output.css" rel="stylesheet">
+</head>
+<body class="bg-bg text-gray-300 font-sans selection:bg-brand selection:text-white">
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 top-0 border-b border-white/5 bg-bg/80 backdrop-blur-md">
+        <div class="w-full px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="../index.html" class="flex items-center gap-3">
+                    <img src="../public/logo-raw.png" alt="Chainbox" class="h-8 w-8">
+                    <span class="font-bold text-lg text-white tracking-tight">Chainbox</span>
+                </a>
+            </div>
+            <div class="flex items-center gap-6">
+                 <button id="search-trigger" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-500 hover:text-white hover:border-white/20 transition-all">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <span>Search</span>
+                    <span class="text-xs bg-white/10 px-1.5 py-0.5 rounded border border-white/5">Ctrl K</span>
+                </button>
+                <div class="flex items-center gap-6 text-sm font-medium text-gray-400">
+                    <a href="getting-started.html" class="text-white">Guide</a>
+                    <a href="https://github.com/sddion/chainbox" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="pt-16 flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="fixed w-64 h-[calc(100vh-4rem)] overflow-y-auto border-r border-white/5 bg-bg hidden lg:block p-6">
+            <div class="space-y-8">
+                <div>
+                    <h5 class="text-sm font-bold text-white mb-4">Guide</h5>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="getting-started.html" class="block hover:text-white transition-colors">Getting Started</a></li>
+                        <li><a href="core-concepts.html" class="block hover:text-white transition-colors">Core Concepts</a></li>
+                        <li><a href="execution-context.html" class="block hover:text-white transition-colors">Execution Context</a></li>
+                        <li><a href="capability-chaining.html" class="block hover:text-white transition-colors">Capability Chaining</a></li>
+                        <li><a href="error-handling.html" class="block hover:text-white transition-colors">Error Handling</a></li>
+                        <li><a href="security.html" class="block hover:text-white transition-colors">Security</a></li>
+                        <li><a href="supabase-adapter.html" class="block text-brand font-medium">Supabase Adapter</a></li>
+                        <li><a href="faq.html" class="block hover:text-white transition-colors">FAQ</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-sm font-bold text-white mb-4">Reference</h5>
+                    <ul class="space-y-3 text-sm text-gray-400">
+                        <li><a href="../reference/capabilities.html" class="block hover:text-white transition-colors">Capabilities</a></li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:pl-64">
+            <div class="max-w-4xl mx-auto px-6 py-12">
+                <article class="prose prose-invert max-w-none">
+                    <h1>Supabase Adapter</h1>
+                    <p>Chainbox includes a built-in adapter for Supabase.</p>
+
+                    <h2>Setup</h2>
+                    <p>Set the following environment variables:</p>
+                    <ul>
+                        <li><code>CHAINBOX_SUPABASE_URL</code></li>
+                        <li><code>CHAINBOX_SUPABASE_SECRET_KEY</code> (or <code>SUPABASE_SERVICE_ROLE_KEY</code>)</li>
+                    </ul>
+                    <p>Chainbox will automatically initialize <code>ctx.db</code> with these credentials.</p>
+
+                    <h2>Usage in Capabilities</h2>
+                    <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
+<pre><code><span class="text-purple-400">import</span> { Ctx } <span class="text-purple-400">from</span> <span class="text-green-400">"@sddion/chainbox"</span>;
+
+<span class="text-purple-400">export default async function</span> <span class="text-blue-400">list</span>(input: <span class="text-yellow-400">any</span>, ctx: <span class="text-yellow-400">Ctx</span>) {
+    <span class="text-purple-400">const</span> { data, error } <span class="text-purple-400">=</span> <span class="text-purple-400">await</span> ctx.db
+        .<span class="text-blue-400">from</span>(<span class="text-green-400">"todos"</span>)
+        .<span class="text-blue-400">select</span>(<span class="text-green-400">"*"</span>);
+
+    <span class="text-purple-400">if</span> (error) <span class="text-purple-400">throw</span> error;
+    <span class="text-purple-400">return</span> data;
+}</code></pre>
+                    </div>
+
+                    <h2>Row Level Security (RLS)</h2>
+                    <p>token if available, or use <code>supabase.auth.setSession</code> within the context creation logic.</p>
+
+                </article>
+            </div>
+        </main>
+    </div>
+<script type="module" src="../src/search.js"></script></body>
+</html>
