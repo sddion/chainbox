@@ -1,16 +1,21 @@
 {
     "name": "chainbox-docs",
     "version": "1.0.0",
+    "type": "module",
     "private": true,
     "scripts": {
         "build:search": "node scripts/build-search.mjs",
-        "build": "npm run build:search && npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --minify",
-        "dev": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --watch"
+        "build": "npm run build:search && postcss src/input.css -o dist/output.css",
+        "dev": "postcss src/input.css -o dist/output.css --watch"
     },
     "dependencies": {
         "@tailwindcss/cli": "^4.0.0",
+        "@tailwindcss/postcss": "^4.0.0",
         "autoprefixer": "^10.4.23",
         "postcss": "^8.5.6",
         "tailwindcss": "^4.0.0"
+    },
+    "devDependencies": {
+        "postcss-cli": "^11.0.1"
     }
 }
