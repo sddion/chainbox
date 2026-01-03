@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 
+# VitePress
+docs/.vitepress/dist
+docs/.vitepress/cache
+
 # Build output (not needed in git, rebuilds from source)
 dist/
 

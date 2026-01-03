@@ -1,8 +1,14 @@
+<p align="center">
+  <img src="docs/public/logo.png" alt="Chainbox Logo" width="150" height="150" />
+</p>
+
 # Chainbox
 
 **Chainbox** is an execution-first backend framework that turns backend logic
 into callable capabilities. It eliminates the need for APIs by shifting security
 and complexity from the network layer up to a secure execution fabric.
+
+[**📚 Read the Documentation**](https://sddion.github.io/chainbox/)
 
 ## Zero-Surface Security Model
 
@@ -54,8 +60,8 @@ Every function receives a controlled context providing scoped capabilities:
 ```typescript
 import { Ctx } from "@sddion/chainbox";
 
-export default async function (ctx: Ctx) {
-  const { a, b } = ctx.input;
+export default async function (input: any, ctx: Ctx) {
+  const { a, b } = input;
   return a + b;
 }
 ```
@@ -71,6 +77,6 @@ import { Call } from "@sddion/chainbox/client";
 const sum = await Call("Math.Add", { a: 10, b: 20 });
 ```
 
-## 📜 License
+## License
 
 MIT
