@@ -1,12 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error Handling - Chainbox Documentation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/x-icon" href="../public/favicon.ico"><link href="../dist/output.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="../public/favicon.ico">
+    <link href="../dist/output.css" rel="stylesheet">
 </head>
+
 <body class="bg-bg text-gray-300 font-sans selection:bg-brand selection:text-white">
     <!-- Navbar -->
     <nav class="fixed w-full z-50 top-0 border-b border-white/5 bg-bg/80 backdrop-blur-md">
@@ -18,55 +23,74 @@
                 </a>
             </div>
             <div class="flex items-center gap-6">
-                 <button id="search-trigger" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-500 hover:text-white hover:border-white/20 transition-all">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <button id="search-trigger"
+                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-500 hover:text-white hover:border-white/20 transition-all">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                     <span>Search</span>
                     <span class="text-xs bg-white/10 px-1.5 py-0.5 rounded border border-white/5">Ctrl K</span>
                 </button>
                 <div class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-400">
                     <a href="getting-started.html" class="text-white">Guide</a>
-                    <a href="https://github.com/sddion/chainbox" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+                    <a href="https://github.com/sddion/chainbox" target="_blank"
+                        class="hover:text-white transition-colors">GitHub</a>
                 </div>
                 <!-- Mobile Menu Button -->
                 <button id="mobile-menu-trigger" class="md:hidden p-2 text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
                 </button>
             </div>
             <!-- Mobile Menu Overlay -->
             <div id="mobile-menu" class="hidden fixed inset-0 z-60 bg-bg/95 backdrop-blur-xl pt-24 px-6">
                 <button id="mobile-menu-close" class="absolute top-6 right-6 text-gray-400 hover:text-white">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
                 <nav class="flex flex-col gap-8 text-xl font-medium text-center">
                     <a href="getting-started.html" class="text-white hover:text-brand transition-colors">Guide</a>
-                    <a href="https://github.com/sddion/chainbox" target="_blank" class="text-white hover:text-brand transition-colors">GitHub</a>
+                    <a href="https://github.com/sddion/chainbox" target="_blank"
+                        class="text-white hover:text-brand transition-colors">GitHub</a>
                 </nav>
             </div>
-            </div>
+        </div>
         </div>
     </nav>
 
     <div class="pt-16 flex min-h-screen">
         <!-- Sidebar -->
-        <aside class="fixed w-64 h-[calc(100vh-4rem)] overflow-y-auto border-r border-white/5 bg-bg hidden lg:block p-6">
+        <aside
+            class="fixed w-64 h-[calc(100vh-4rem)] overflow-y-auto border-r border-white/5 bg-bg hidden lg:block p-6">
             <div class="space-y-8">
                 <div>
                     <h5 class="text-sm font-bold text-white mb-4">Guide</h5>
                     <ul class="space-y-3 text-sm text-gray-400">
-                        <li><a href="getting-started.html" class="block hover:text-white transition-colors">Getting Started</a></li>
-                        <li><a href="core-concepts.html" class="block hover:text-white transition-colors">Core Concepts</a></li>
-                        <li><a href="execution-context.html" class="block hover:text-white transition-colors">Execution Context</a></li>
-                        <li><a href="capability-chaining.html" class="block hover:text-white transition-colors">Capability Chaining</a></li>
+                        <li><a href="getting-started.html" class="block hover:text-white transition-colors">Getting
+                                Started</a></li>
+                        <li><a href="core-concepts.html" class="block hover:text-white transition-colors">Core
+                                Concepts</a></li>
+                        <li><a href="execution-context.html" class="block hover:text-white transition-colors">Execution
+                                Context</a></li>
+                        <li><a href="capability-chaining.html"
+                                class="block hover:text-white transition-colors">Capability Chaining</a></li>
                         <li><a href="error-handling.html" class="block text-brand font-medium">Error Handling</a></li>
                         <li><a href="security.html" class="block hover:text-white transition-colors">Security</a></li>
-                        <li><a href="supabase-adapter.html" class="block hover:text-white transition-colors">Supabase Adapter</a></li>
+                        <li><a href="supabase-adapter.html" class="block hover:text-white transition-colors">Supabase
+                                Adapter</a></li>
                         <li><a href="faq.html" class="block hover:text-white transition-colors">FAQ</a></li>
                     </ul>
                 </div>
                 <div>
                     <h5 class="text-sm font-bold text-white mb-4">Reference</h5>
                     <ul class="space-y-3 text-sm text-gray-400">
-                        <li><a href="../reference/capabilities.html" class="block hover:text-white transition-colors">Capabilities</a></li>
+                        <li><a href="../reference/capabilities.html"
+                                class="block hover:text-white transition-colors">Capabilities</a></li>
                     </ul>
                 </div>
             </div>
@@ -77,13 +101,14 @@
             <div class="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
                 <article class="prose prose-invert max-w-none">
                     <h1>Error Handling</h1>
-                    <p>Chainbox treats errors as first-class citizens. When a capability throws an error, it interrupts the execution chain and returns the error to the client.</p>
+                    <p>Chainbox treats errors as first-class citizens. When a capability throws an error, it interrupts
+                        the execution chain and returns the error to the client.</p>
 
                     <h2>Throwing Errors</h2>
                     <p>You can throw any error from a capability.</p>
 
                     <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
-<pre><code><span class="text-gray-500">// Server</span>
+                        <pre><code><span class="text-gray-500">// Server</span>
 <span class="text-purple-400">const</span> items <span class="text-purple-400">=</span> {
     add: <span class="text-purple-400">async</span> (input, ctx) <span class="text-purple-400">=></span> {
         <span class="text-purple-400">if</span> (!input.name) {
@@ -95,7 +120,7 @@
 
                     <h2>Client-Side Handling</h2>
                     <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
-<pre><code><span class="text-purple-400">try</span> {
+                        <pre><code><span class="text-purple-400">try</span> {
     <span class="text-purple-400">await</span> <span class="text-blue-400">call</span>(<span class="text-green-400">"items.add"</span>, {});
 } <span class="text-purple-400">catch</span> (error) {
     <span class="text-gray-500">// error.message === "Name is required"</span>
@@ -104,7 +129,8 @@
                     </div>
 
                     <h2>Custom Error Types</h2>
-                    <p>For better control, you can define custom error classes to distinguish between validation errors, authorization errors, etc.</p>
+                    <p>For better control, you can define custom error classes to distinguish between validation errors,
+                        authorization errors, etc.</p>
 
                 </article>
                 <div id="pagination-container"></div>
@@ -113,6 +139,8 @@
             <div id="toc-container" class="relative"></div>
         </main>
     </div>
-<script type="module" src="../src/search.js"></script>
-<script type="module" src="../src/ui.js"></script></body>
+    <script type="module" src="../src/search.js"></script>
+    <script type="module" src="../src/ui.js"></script>
+</body>
+
 </html>

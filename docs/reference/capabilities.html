@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Capability Reference - Chainbox Documentation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="../public/favicon.ico">
     <link href="../dist/output.css" rel="stylesheet">
 </head>
+
 <body class="bg-bg text-gray-300 font-sans selection:bg-brand selection:text-white">
 
     <!-- Navbar -->
@@ -20,49 +24,70 @@
                 </a>
             </div>
             <div class="flex items-center gap-6">
-                 <button id="search-trigger" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-500 hover:text-white hover:border-white/20 transition-all">
-                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                <button id="search-trigger"
+                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-500 hover:text-white hover:border-white/20 transition-all">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
                     <span>Search</span>
                     <span class="text-xs bg-white/10 px-1.5 py-0.5 rounded border border-white/5">Ctrl K</span>
                 </button>
                 <div class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-400">
                     <a href="../guide/getting-started.html" class="hover:text-white transition-colors">Guide</a>
-                    <a href="https://github.com/sddion/chainbox" target="_blank" class="hover:text-white transition-colors">GitHub</a>
+                    <a href="https://github.com/sddion/chainbox" target="_blank"
+                        class="hover:text-white transition-colors">GitHub</a>
                 </div>
                 <!-- Mobile Menu Button -->
                 <button id="mobile-menu-trigger" class="md:hidden p-2 text-gray-400 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
                 </button>
             </div>
             <!-- Mobile Menu Overlay -->
             <div id="mobile-menu" class="hidden fixed inset-0 z-60 bg-bg/95 backdrop-blur-xl pt-24 px-6">
                 <button id="mobile-menu-close" class="absolute top-6 right-6 text-gray-400 hover:text-white">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
                 <nav class="flex flex-col gap-8 text-xl font-medium text-center">
-                    <a href="../guide/getting-started.html" class="text-white hover:text-brand transition-colors">Guide</a>
-                    <a href="https://github.com/sddion/chainbox" target="_blank" class="text-white hover:text-brand transition-colors">GitHub</a>
+                    <a href="../guide/getting-started.html"
+                        class="text-white hover:text-brand transition-colors">Guide</a>
+                    <a href="https://github.com/sddion/chainbox" target="_blank"
+                        class="text-white hover:text-brand transition-colors">GitHub</a>
                 </nav>
             </div>
-            </div>
+        </div>
         </div>
     </nav>
 
     <div class="pt-16 flex min-h-screen">
-        
+
         <!-- Sidebar (Left) -->
-        <aside class="fixed w-64 h-[calc(100vh-4rem)] overflow-y-auto border-r border-white/5 bg-bg hidden lg:block p-6">
+        <aside
+            class="fixed w-64 h-[calc(100vh-4rem)] overflow-y-auto border-r border-white/5 bg-bg hidden lg:block p-6">
             <div class="space-y-8">
                 <div>
                     <h5 class="text-sm font-bold text-white mb-4">Guide</h5>
                     <ul class="space-y-3 text-sm text-gray-400">
-                        <li><a href="../guide/getting-started.html" class="block hover:text-white transition-colors">Getting Started</a></li>
-                        <li><a href="../guide/core-concepts.html" class="block hover:text-white transition-colors">Core Concepts</a></li>
-                        <li><a href="../guide/execution-context.html" class="block hover:text-white transition-colors">Execution Context</a></li>
-                        <li><a href="../guide/capability-chaining.html" class="block hover:text-white transition-colors">Capability Chaining</a></li>
-                        <li><a href="../guide/error-handling.html" class="block hover:text-white transition-colors">Error Handling</a></li>
-                        <li><a href="../guide/security.html" class="block hover:text-white transition-colors">Security</a></li>
-                        <li><a href="../guide/supabase-adapter.html" class="block hover:text-white transition-colors">Supabase Adapter</a></li>
+                        <li><a href="../guide/getting-started.html"
+                                class="block hover:text-white transition-colors">Getting Started</a></li>
+                        <li><a href="../guide/core-concepts.html" class="block hover:text-white transition-colors">Core
+                                Concepts</a></li>
+                        <li><a href="../guide/execution-context.html"
+                                class="block hover:text-white transition-colors">Execution Context</a></li>
+                        <li><a href="../guide/capability-chaining.html"
+                                class="block hover:text-white transition-colors">Capability Chaining</a></li>
+                        <li><a href="../guide/error-handling.html"
+                                class="block hover:text-white transition-colors">Error Handling</a></li>
+                        <li><a href="../guide/security.html"
+                                class="block hover:text-white transition-colors">Security</a></li>
+                        <li><a href="../guide/supabase-adapter.html"
+                                class="block hover:text-white transition-colors">Supabase Adapter</a></li>
                         <li><a href="../guide/faq.html" class="block hover:text-white transition-colors">FAQ</a></li>
                     </ul>
                 </div>
@@ -77,7 +102,7 @@
 
         <!-- Main Content (Center + Right TOC) -->
         <main class="flex-1 lg:pl-64 flex flex-col xl:flex-row">
-            
+
             <div class="flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
                 <article class="prose prose-invert max-w-none">
                     <h1>Capability Reference</h1>
@@ -88,7 +113,7 @@
                     <p><strong>Signature</strong></p>
 
                     <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
-<pre><code><span class="text-purple-400">function</span> <span class="text-blue-400">Call</span>(
+                        <pre><code><span class="text-purple-400">function</span> <span class="text-blue-400">Call</span>(
   fnName: <span class="text-yellow-400">string</span>,
   input?: <span class="text-yellow-400">any</span>,
   options?: <span class="text-yellow-400">CallOptions</span>,
@@ -96,7 +121,7 @@
                     </div>
 
                     <p><strong>Parameters</strong></p>
-                    
+
                     <div class="overflow-x-auto mb-6 rounded-lg border border-white/10 bg-bg-alt">
                         <table class="w-full text-left border-collapse">
                             <thead>
@@ -112,13 +137,15 @@
                                     <td class="p-3 font-mono text-brand-light">fnName</td>
                                     <td class="p-3 font-mono text-yellow-500">string</td>
                                     <td class="p-3">Yes</td>
-                                    <td class="p-3">The dot-notation path to the capability (e.g., <code>'user.create'</code>).</td>
+                                    <td class="p-3">The dot-notation path to the capability (e.g.,
+                                        <code>'user.create'</code>).</td>
                                 </tr>
                                 <tr class="border-b border-white/5">
                                     <td class="p-3 font-mono text-brand-light">input</td>
                                     <td class="p-3 font-mono text-yellow-500">any</td>
                                     <td class="p-3">No</td>
-                                    <td class="p-3">The input data payload passed to the capability as the first argument.</td>
+                                    <td class="p-3">The input data payload passed to the capability as the first
+                                        argument.</td>
                                 </tr>
                                 <tr>
                                     <td class="p-3 font-mono text-brand-light">options</td>
@@ -132,10 +159,11 @@
 
                     <h2>Server</h2>
                     <h3><code>Ctx</code> (Execution Context)</h3>
-                    <p>The execution context passed to every capability as the second argument. It provides access to the request identity, environment, and storage.</p>
-                    
+                    <p>The execution context passed to every capability as the second argument. It provides access to
+                        the request identity, environment, and storage.</p>
+
                     <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
-<pre><code><span class="text-purple-400">type</span> <span class="text-yellow-400">Ctx</span> = {
+                        <pre><code><span class="text-purple-400">type</span> <span class="text-yellow-400">Ctx</span> = {
   input: <span class="text-yellow-400">any</span>;
   identity?: <span class="text-yellow-400">Identity</span>;
   env: <span class="text-yellow-400">Record</span><<span class="text-yellow-400">string</span>, <span class="text-yellow-400">string</span> | <span class="text-purple-400">undefined</span>>;
@@ -155,7 +183,8 @@
                     <p>Represents the authenticated user or service.</p>
 
                     <h4><code>ctx.kv</code> & <code>ctx.blob</code></h4>
-                    <p>Both <code>kv</code> and <code>blob</code> implement the <code>StorageAdapter</code> interface for persistent storage.</p>
+                    <p>Both <code>kv</code> and <code>blob</code> implement the <code>StorageAdapter</code> interface
+                        for persistent storage.</p>
 
                     <div class="overflow-x-auto mb-6 rounded-lg border border-white/10 bg-bg-alt">
                         <table class="w-full text-left border-collapse">
@@ -205,4 +234,5 @@
     <script type="module" src="../src/search.js"></script>
     <script type="module" src="../src/ui.js"></script>
 </body>
+
 </html>
