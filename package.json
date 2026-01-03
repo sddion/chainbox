@@ -25,6 +25,9 @@
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",
     "commander": "^14.0.2",

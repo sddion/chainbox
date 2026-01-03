@@ -22,8 +22,6 @@ features:
     details: Full TypeScript support. Get autocomplete and type checking for your backend functions on the client.
 ---
 
-<div class="vp-doc">
-
 ## Why Chainbox?
 
 ### The Problem: API Complexity
@@ -84,5 +82,3 @@ authenticated users.
 Chainbox plays nicely with Supabase. Use the `ctx.db` adapter to interact with
 your Supabase database directly within your capabilities, respecting RLS
 policies.
-
-</div>
