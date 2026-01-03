@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/public/logo.png" alt="Chainbox Logo" width="150" height="150" />
+  <img src="https://github.com/sddion/chainbox/blob/main/docs/public/logo-raw.png?raw=true" alt="Chainbox Logo" width="150" height="150" />
 </p>
 
 # Chainbox
@@ -77,6 +77,3 @@ import { Call } from "@sddion/chainbox/client";
 const sum = await Call("Math.Add", { a: 10, b: 20 });
 ```
 
-## License
-
-MIT
