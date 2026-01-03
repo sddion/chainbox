@@ -3,13 +3,11 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "docs:dev": "vitepress dev",
-        "start": "vitepress dev",
-        "docs:build": "vitepress build",
-        "docs:preview": "vitepress preview"
+        "build": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --minify",
+        "dev": "npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --watch"
     },
     "devDependencies": {
-        "vitepress": "^1.0.0-rc.31",
-        "vue": "^3.3.11"
+        "@tailwindcss/cli": "^4.0.0-alpha.1",
+        "tailwindcss": "^4.0.0-alpha.1"
     }
 }

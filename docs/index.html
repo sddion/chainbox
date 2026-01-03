@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Chainbox - Execution-first, no APIs</title>
+        <meta
+            name="description"
+            content="Stop Building APIs. Start Chaining Capabilities."
+        >
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+            rel="stylesheet"
+        >
+        <link href="./dist/output.css" rel="stylesheet">
+    </head>
+    <body
+        class="bg-bg text-gray-300 font-sans selection:bg-brand selection:text-white"
+    >
+        <!-- Navbar -->
+        <nav
+            class="fixed w-full z-50 top-0 border-b border-white/5 bg-bg/80 backdrop-blur-md"
+        >
+            <div
+                class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between"
+            >
+                <div class="flex items-center gap-3">
+                    <img
+                        src="public/logo-raw.png"
+                        alt="Chainbox"
+                        class="h-8 w-8"
+                    >
+                    <span class="font-bold text-lg text-white tracking-tight"
+                    >Chainbox</span>
+                </div>
+                <div
+                    class="flex items-center gap-6 text-sm font-medium text-gray-400"
+                >
+                    <a
+                        href="#getting-started"
+                        class="hover:text-white transition-colors"
+                    >Guide</a>
+                    <a
+                        href="https://github.com/sddion/chainbox"
+                        target="_blank"
+                        class="hover:text-white transition-colors"
+                    >GitHub</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+            <!-- Background Mesh -->
+            <div
+                class="absolute inset-0 bg-mesh opacity-40 pointer-events-none"
+            >
+            </div>
+
+            <div class="max-w-7xl mx-auto px-6 relative z-10 text-center">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/10 border border-brand/20 text-brand text-xs font-semibold mb-8"
+                >
+                    <span>v0.9.3 Released</span>
+                </div>
+                <h1
+                    class="text-5xl lg:text-7xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-brand to-purple-500 mb-6 pb-2"
+                >
+                    Execution-first,<br>no APIs.
+                </h1>
+                <p
+                    class="text-lg lg:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed"
+                >
+                    Stop Building APIs. Start Chaining Capabilities. <br>
+                    Securely expose functions to your client without defining
+                    routes or serializers.
+                </p>
+                <div
+                    class="flex flex-col sm:flex-row items-center justify-center gap-4"
+                >
+                    <a
+                        href="#getting-started"
+                        class="px-8 py-3.5 rounded-lg bg-brand hover:bg-brand-dark text-white font-semibold transition-all shadow-lg shadow-brand/25"
+                    >
+                        Get Started
+                    </a>
+                    <a
+                        href="https://github.com/sddion/chainbox"
+                        class="px-8 py-3.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-white font-semibold transition-all"
+                    >
+                        View on GitHub
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Grid -->
+        <section class="py-24 bg-bg-alt border-y border-white/5">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-brand/30 transition-colors"
+                    >
+                        <div
+                            class="h-10 w-10 rounded-lg bg-brand/10 flex items-center justify-center text-brand mb-4"
+                        >
+                            <svg
+                                class="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">
+                            No More REST/GraphQL
+                        </h3>
+                        <p class="text-gray-400 leading-relaxed">
+                            Call backend functions directly. No routes,
+                            controllers, DTOs, or resolvers needed.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-brand/30 transition-colors"
+                    >
+                        <div
+                            class="h-10 w-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4"
+                        >
+                            <svg
+                                class="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">
+                            Capability Chaining
+                        </h3>
+                        <p class="text-gray-400 leading-relaxed">
+                            Chain functions in a single request. Pipe output
+                            from one to another securely.
+                        </p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-brand/30 transition-colors"
+                    >
+                        <div
+                            class="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 mb-4"
+                        >
+                            <svg
+                                class="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-white mb-2">
+                            Type-Safe Execution
+                        </h3>
+                        <p class="text-gray-400 leading-relaxed">
+                            End-to-end TypeScript support. Autocomplete backend
+                            functions on your client.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Code Comparison -->
+        <section class="py-24">
+            <div class="max-w-7xl mx-auto px-6">
+                <div class="grid lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold mb-6">
+                            The Problem: API Complexity
+                        </h2>
+                        <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                            Building APIs is tedious. Creating routes,
+                            serializers, and syncing types with the client takes
+                            time away from building features.
+                        </p>
+                        <div class="relative group">
+                            <div
+                                class="absolute -inset-1 bg-linear-to-r from-red-500 to-orange-500 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"
+                            >
+                            </div>
+                            <div
+                                class="relative bg-bg-alt rounded-lg border border-white/10 p-6 font-mono text-sm overflow-x-auto"
+                            >
+                                <div class="text-gray-500 mb-2">
+                                    // The Old Way (Fetch/REST)
+                                </div>
+                                <div class="text-purple-400">const</div>
+                                <div class="inline text-white">res</div>
+                                <div class="inline text-purple-400">=</div>
+                                <div class="inline text-purple-400">await</div>
+                                <div class="inline text-blue-400">
+                                    fetch
+                                </div>(<div class="inline text-green-400">
+                                    "/api/users"
+                                </div>, {<br>
+                                &nbsp;&nbsp;method: <div
+                                    class="inline text-green-400"
+                                >
+                                    "POST"
+                                </div>,<br>
+                                &nbsp;&nbsp;body: <div
+                                    class="inline text-yellow-400"
+                                >
+                                    JSON
+                                </div>.<div class="inline text-blue-400">
+                                    stringify
+                                </div>({ email, password }),<br>
+                                });<br>
+                                <div class="text-purple-400">const</div>
+                                <div class="inline text-white">user</div>
+                                <div class="inline text-purple-400">=</div>
+                                <div class="inline text-purple-400">await</div>
+                                <div class="inline text-white">res</div>.<div
+                                    class="inline text-blue-400"
+                                >
+                                    json
+                                </div>();
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="text-3xl font-bold mb-6">
+                            The Solution: Chainbox
+                        </h2>
+                        <p class="text-gray-400 text-lg mb-8 leading-relaxed">
+                            Just import `Call` and invoke your backend
+                            capabilities. It's like calling a function, but
+                            secure and networked.
+                        </p>
+                        <div class="relative group">
+                            <div
+                                class="absolute -inset-1 bg-linear-to-r from-brand to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"
+                            >
+                            </div>
+                            <div
+                                class="relative bg-bg-alt rounded-lg border border-white/10 p-6 font-mono text-sm overflow-x-auto"
+                            >
+                                <div class="text-gray-500 mb-2">
+                                    // The Chainbox Way
+                                </div>
+                                <div class="text-purple-400">import</div> { <div
+                                    class="inline text-yellow-400"
+                                >
+                                    Call
+                                </div> } <div class="text-purple-400">from</div>
+                                <div class="inline text-green-400">
+                                    "@sddion/chainbox/client"
+                                </div>;<br><br>
+                                <div class="text-purple-400">const</div>
+                                <div class="inline text-white">user</div>
+                                <div class="inline text-purple-400">=</div>
+                                <div class="inline text-purple-400">await</div>
+                                <div class="inline text-yellow-400">
+                                    Call
+                                </div>(<div class="inline text-green-400">
+                                    "user.create"
+                                </div>, { email, password });
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-12 border-t border-white/5 bg-bg-alt text-center">
+            <p class="text-gray-500 text-sm">
+                Released under the MIT License. <br>
+                Copyright © 2026 Chainbox
+            </p>
+        </footer>
+    </body>
+</html>
