@@ -1,6 +1,6 @@
 {
   "name": "@sddion/chainbox",
-  "version": "0.9.3",
+  "version": "1.0.0",
   "description": "Execution-first backend framework for Next.js",
   "license": "MIT",
   "keywords": [
@@ -60,6 +60,11 @@
       "types": "./dist/transport/Mesh.d.ts",
       "import": "./dist/transport/Mesh.js",
       "require": "./dist/transport/Mesh.js"
+    },
+    "./core/Adapter": {
+      "types": "./dist/core/Adapter.d.ts",
+      "import": "./dist/core/Adapter.js",
+      "require": "./dist/core/Adapter.js"
     }
   }
 }
