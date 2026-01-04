@@ -1,8 +1,12 @@
 {
   "name": "@sddion/chainbox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Execution-first backend framework for Next.js",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sddion/chainbox.git"
+  },
   "keywords": [
     "nextjs",
     "backend",
