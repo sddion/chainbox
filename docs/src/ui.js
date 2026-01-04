@@ -6,6 +6,8 @@
 const SIDEBAR_ORDER = [
     { title: "Getting Started", url: "getting-started.html", path: "guide/getting-started.html" },
     { title: "Core Concepts", url: "core-concepts.html", path: "guide/core-concepts.html" },
+    { title: "Architecture", url: "architecture.html", path: "guide/architecture.html" },
+    { title: "Client SDK", url: "client-sdk.html", path: "guide/client-sdk.html" },
     { title: "Execution Context", url: "execution-context.html", path: "guide/execution-context.html" },
     { title: "Capability Chaining", url: "capability-chaining.html", path: "guide/capability-chaining.html" },
     { title: "Error Handling", url: "error-handling.html", path: "guide/error-handling.html" },

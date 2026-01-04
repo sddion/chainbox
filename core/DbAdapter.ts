@@ -9,6 +9,9 @@ export class DbAdapter {
 
   constructor(private credentials: { url?: string; secretKey?: string }) {
     if (credentials.url && credentials.secretKey) {
+      if (!credentials.secretKey.startsWith("ey")) {
+        console.warn("chainbox: Supabase secret key does not look like a JWT. Ensure you are using the SERVICE_ROLE key.");
+      }
       this.client = createClient(credentials.url, credentials.secretKey, {
         auth: {
           persistSession: false,
@@ -23,12 +26,7 @@ export class DbAdapter {
    */
   public from(table: string, identity?: Identity) {
     if (!this.client) {
-      console.warn("chainbox: DbAdapter accessed but not configured. Returning mock.");
-      if (process.env.NODE_ENV === "production") throw new Error("DB_NOT_CONFIGURED");
-      return { 
-        select: () => ({ eq: () => ({ single: async () => ({ data: {}, error: null }) }) }),
-        insert: () => ({ select: () => ({ single: async () => ({ data: {}, error: null }) }) })
-      } as any;
+      throw new Error("DB_NOT_CONFIGURED: Supabase credentials are missing. Set CHAINBOX_SUPABASE_URL and CHAINBOX_SUPABASE_SECRET_KEY.");
     }
 
     // If an identity with a token is provided, create a scoped client to enforce RLS

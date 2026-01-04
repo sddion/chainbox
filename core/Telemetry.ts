@@ -261,7 +261,7 @@ export class Telemetry {
   }
 
   /**
-   * Clear all telemetry data (for testing).
+   * Clear all telemetry data.
    */
   public static Clear() {
     this.spans = [];

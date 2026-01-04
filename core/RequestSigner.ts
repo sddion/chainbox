@@ -54,13 +54,22 @@ export class RequestSigner {
     }
 
     // Check timestamp freshness
-    const age = Date.now() - timestamp;
+    const now = Date.now();
+    const age = now - timestamp;
+    
+    // Allow 5 second clock skew for "future" timestamps
+    if (age < -5000) {
+      return { valid: false, error: "SIGNATURE_FROM_FUTURE" };
+    }
+
     if (age > this.ttlMs) {
       return { valid: false, error: "SIGNATURE_EXPIRED" };
     }
 
-    if (age < 0) {
-      return { valid: false, error: "SIGNATURE_FROM_FUTURE" };
+    // Enforce secret presence in production
+    if (!this.secret && process.env.NODE_ENV === "production") {
+      console.error("chainbox: CRITICAL - CHAINBOX_MESH_SECRET is missing in production!");
+      return { valid: false, error: "MISSING_CONFIGURATION" };
     }
 
     // Verify signature

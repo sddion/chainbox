@@ -1,5 +1,5 @@
 import { Registry } from "./Registry";
-import { Context, Ctx, Identity, ExecutionFrame, TraceFrame } from "./Context";
+import { Context, Ctx, Identity, ExecutionFrame, TraceFrame, ChainboxError, ChainboxErrorType } from "./Context";
 import { DbAdapter } from "./DbAdapter";
 import { ExecutionPlanner } from "./ExecutionPlanner";
 import { Mesh, MeshPayload, MeshBatchPayload } from "../transport/Mesh";
@@ -11,6 +11,9 @@ import { Telemetry, SpanContext } from "./Telemetry";
 import { TenantManager } from "./TenantManager";
 import { Cache } from "./Cache";
 import { Authenticator } from "./Authenticator";
+import { PolicyEngine } from "./Policy";
+import { AdapterRegistry } from "./Adapter";
+import { randomUUID } from "crypto";
 
 /**
  * ExecutionRuntime interface for future-proofing (WASM prep).
@@ -24,7 +27,22 @@ export interface ExecutionRuntime {
  */
 export class NodeRuntime implements ExecutionRuntime {
   public async run(handler: any, ctx: Ctx): Promise<any> {
-    return await handler(ctx);
+    // Zero-Surface Security: Default-Deny Network
+    // We strictly limit egress to enforce "Library-First" architecture.
+    const originalFetch = global.fetch;
+    
+    try {
+      // @ts-ignore
+      global.fetch = async (url: string, init?: any) => {
+        // Network Block: Deny all arbitrary HTTP calls
+        throw new Error("NETWORK_ACCESS_DENIED: Use ctx.adapter() for external I/O.");
+      };
+
+      return await handler(ctx);
+    } finally {
+      // Restore access
+      global.fetch = originalFetch;
+    }
   }
 }
 
@@ -52,17 +70,6 @@ export class Executor {
   };
 
   /**
-   * Internal Observability Hooks.
-   */
-  private static onExecutionStart(fn: string, target: string) {
-    // console.log(`[CB-OBS] START: ${fn} (target: ${target})`);
-  }
-
-  private static onExecutionEnd(fn: string, target: string, duration: number) {
-    // console.log(`[CB-OBS] END: ${fn} (target: ${target}, took: ${duration}ms)`);
-  }
-
-  /**
    * Executes a Chainbox function with isolation, safety, and mesh support.
    */
   public static async Execute(
@@ -72,25 +79,148 @@ export class Executor {
     identity?: Identity,
     parentFrame?: ExecutionFrame,
     forceLocal: boolean = false,
-    options: { retries?: number } = {}
+    options: { retries?: number; traceId?: string } = {}
   ): Promise<any> {
     let attempts = 0;
     const maxAttempts = (options.retries || 0) + 1;
 
     // 0. Resolve Identity if not provided (e.g., from a token in options)
     const resolvedIdentity = identity || ((options as any).token ? await Authenticator.Authenticate((options as any).token) : undefined);
+    
+    // 0.1 TraceId Generation
+    const traceId = (options as any).traceId || randomUUID();
 
     while (attempts < maxAttempts) {
       attempts++;
       try {
-        return await this._InternalExecute(fnName, input, parentTrace, resolvedIdentity, parentFrame, forceLocal);
+        return await this._InternalExecute(fnName, input, parentTrace, resolvedIdentity, parentFrame, forceLocal, traceId);
       } catch (error: any) {
-        if (attempts >= maxAttempts || (error.error === "FORBIDDEN") || (error.error === "MAX_CALL_DEPTH_EXCEEDED")) {
+        if (attempts >= maxAttempts || (error.code === "FORBIDDEN") || (error.code === "MAX_CALL_DEPTH_EXCEEDED")) {
           throw error;
         }
         console.warn(`chainbox: Retrying ${fnName} (attempt ${attempts}/${maxAttempts})`);
       }
     }
+  }
+
+  /**
+   * Lifecycle Hook: Execution Start
+   * Handles Telemetry, Rate Limiting, and Tenant Enforcement.
+   */
+  private static onStart(
+    fnName: string,
+    identity: Identity | undefined,
+    frame: ExecutionFrame,
+    parentFrame: ExecutionFrame | undefined
+  ): { spanContext: any } {
+    // 1. Telemetry Start
+    const spanContext = Telemetry.StartSpan(`chainbox.execute.${fnName}`, undefined, {
+      "chainbox.function": fnName,
+      "chainbox.identity": identity?.id || "anonymous",
+      "chainbox.depth": frame.depth,
+    });
+    Telemetry.IncrementCounter("chainbox_execution_total", { function: fnName });
+
+    // 2. Policy Enforcement (Rate Limit & Tenant) - Only at root
+    if (!parentFrame) {
+      RateLimiter.Enforce(fnName, identity?.id);
+      TenantManager.Enforce(identity);
+    }
+
+    return { spanContext };
+  }
+
+  /**
+   * Lifecycle Hook: Execution End (Success)
+   * Handles Telemetry (Success), Audit Log (Success), and Metrics.
+   */
+  private static onEnd(
+    fnName: string,
+    identity: Identity | undefined,
+    currentTrace: TraceFrame,
+    spanContext: any,
+    parentFrame: ExecutionFrame | undefined,
+    startTime: number,
+    effectiveTraceId: string
+  ) {
+    const duration = Date.now() - startTime;
+    currentTrace.durationMs = duration;
+    currentTrace.status = "success";
+    
+    // Outcome Integrity: Fail responsibly if outcome is missing (Never infer)
+    if (!currentTrace.outcome) {
+       console.error(`chainbox: INVARIANT VIOLATION - Function ${fnName} completed without an outcome tag.`);
+       // In production, we might want to be safer, but for v1 strictness, we count this as a system failure.
+       // However, to avoid crashing the request flow for metering, we set it to FAILURE but log heavily.
+       currentTrace.outcome = "FAILURE"; 
+       Telemetry.IncrementCounter("chainbox_invariant_violation", { Type: "MissingOutcome", Function: fnName });
+    }
+
+    // 1. Telemetry End
+    Telemetry.EndSpan(spanContext, { "chainbox.status": "success", "chainbox.outcome": currentTrace.outcome });
+    Telemetry.RecordHistogram("chainbox_execution_duration_ms", duration, { function: fnName });
+
+    // 2. Audit Log - Only at root
+    if (!parentFrame) {
+      AuditLog.LogSuccess(fnName, identity, duration, undefined, effectiveTraceId, currentTrace);
+    }
+
+    // 3. Tenant Usage
+    TenantManager.RecordCall(identity, true);
+  }
+
+  /**
+   * Lifecycle Hook: Execution Failure
+   * Handles Error Normalization, Telemetry (Error), and Audit Log (Error).
+   */
+  private static onFailure(
+    fnName: string,
+    error: any,
+    identity: Identity | undefined,
+    currentTrace: TraceFrame,
+    spanContext: any,
+    parentFrame: ExecutionFrame | undefined,
+    startTime: number,
+    effectiveTraceId: string
+  ): ChainboxError {
+    const duration = Date.now() - startTime;
+    
+    // 1. Error Normalization
+    const normalizedError = error instanceof ChainboxError ? error : new ChainboxError(
+      error.code || error.error || "EXECUTION_ERROR",
+      error.message || "Unknown execution error",
+      fnName,
+      effectiveTraceId,
+      { originalError: error }
+    );
+
+    if (normalizedError.code === "EXECUTION_ERROR") {
+      console.error(`chainbox: Execution error in "${fnName}"`, error);
+    }
+
+    // 2. Trace Update
+    currentTrace.status = "error";
+    currentTrace.durationMs = duration;
+    // Map error codes to outcomes if not already set
+    if (!currentTrace.outcome) {
+      switch (normalizedError.code) {
+        case "EXECUTION_TIMEOUT": currentTrace.outcome = "TIMEOUT"; break;
+        case "CIRCUIT_OPEN": currentTrace.outcome = "CIRCUIT_OPEN"; break;
+        case "FORBIDDEN": currentTrace.outcome = "FORBIDDEN"; break;
+        default: currentTrace.outcome = "FAILURE";
+      }
+    }
+
+    // 3. Telemetry End
+    Telemetry.EndSpanWithError(spanContext, normalizedError.code);
+    Telemetry.IncrementCounter("chainbox_execution_errors_total", { function: fnName, error: normalizedError.code });
+
+    // 4. Audit Log - Only at root
+    if (!parentFrame) {
+      AuditLog.LogError(fnName, normalizedError.code, identity, duration, undefined, effectiveTraceId, currentTrace);
+    }
+    
+    return normalizedError;
   }
 
   private static async _InternalExecute(
@@ -99,9 +229,12 @@ export class Executor {
     parentTrace: TraceFrame[] = [],
     identity?: Identity,
     parentFrame?: ExecutionFrame,
-    forceLocal: boolean = false
+    forceLocal: boolean = false,
+    traceId?: string
   ): Promise<any> {
     const startTime = Date.now();
+    const effectiveTraceId = traceId || randomUUID();
+
     
     // 0. Initialize or update execution frame
     // If this is a mesh node, reset startTime to avoid stale timestamps from remote calls
@@ -129,49 +262,40 @@ export class Executor {
     // but the real data is in the tree.
     const traceArray: TraceFrame[] = [...parentTrace, currentTrace];
 
-    // Telemetry: Start span for this execution
-    const spanContext = Telemetry.StartSpan(`chainbox.execute.${fnName}`, undefined, {
-      "chainbox.function": fnName,
-      "chainbox.identity": identity?.id || "anonymous",
-      "chainbox.depth": frame.depth,
-    });
-    Telemetry.IncrementCounter("chainbox_execution_total", { function: fnName });
+    // --- LIFECYCLE: START ---
+    // Note: We create context *before* checking cache to ensure consistent telemetry even for cache hits (optional choice, but cleaner)
+    // However, rate limits should probably strictly apply.
+    const { spanContext } = this.onStart(fnName, identity, frame, parentFrame);
     
     try {
       // 1. Safety Checks: Recursion Depth
       if (frame.depth > frame.maxDepth) {
         currentTrace.status = "error";
-        throw {
-          error: "MAX_CALL_DEPTH_EXCEEDED",
-          limit: frame.maxDepth,
-          trace: traceArray
-        };
-      }
-
-      // 1.5 Rate Limiting (only at root level to avoid double-counting)
-      if (!parentFrame) {
-        RateLimiter.Enforce(fnName, identity?.id);
-        TenantManager.Enforce(identity);
+        currentTrace.outcome = "FAILURE";
+        throw new ChainboxError("MAX_CALL_DEPTH_EXCEEDED", `Recursion depth exceeded (${frame.depth})`, fnName, effectiveTraceId, { limit: frame.maxDepth });
       }
 
       // 1.6 Cache Check (before execution)
       const cachedResult = Cache.Get(fnName, input);
       if (cachedResult !== undefined) {
         currentTrace.status = "success";
+        currentTrace.outcome = "SUCCESS";
         currentTrace.cached = true;
         Telemetry.IncrementCounter("chainbox_cache_hits", { function: fnName });
+        
+        // --- LIFECYCLE: END (Cache Hit) ---
+        // We artificially call onEnd to record the 'success' of a cache hit, though duration is negligible
+        this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
+        
         return { ...cachedResult, trace: [currentTrace] };
       }
 
-      // 2. Safety Checks: Timeout
+      // 2. Safety Checks: Timeout Check (Pre-execution)
       const elapsed = Date.now() - frame.startTime;
       if (elapsed > frame.timeoutMs) {
         currentTrace.status = "error";
-        throw {
-          error: "EXECUTION_TIMEOUT",
-          timeoutMs: frame.timeoutMs,
-          trace: traceArray
-        };
+        currentTrace.outcome = "TIMEOUT";
+        throw new ChainboxError("EXECUTION_TIMEOUT", "Execution timed out before starting", fnName, effectiveTraceId, { timeoutMs: frame.timeoutMs });
       }
 
       // 3. Execution Planning (MESH)
@@ -183,8 +307,6 @@ export class Executor {
       currentTrace.target = plan.target;
       currentTrace.nodeId = plan.nodeId || (isRemoteNode ? "remote-node" : "local-host");
 
-      this.onExecutionStart(fnName, plan.target);
-
       if (plan.target === "remote" && !forceLocal && !isRemoteNode) {
         if (!plan.nodeId) throw new Error("REMOTE_NODE_NOT_SPECIFIED");
         
@@ -193,7 +315,8 @@ export class Executor {
           input,
           identity,
           frame,
-          trace: traceArray
+          trace: traceArray,
+          traceId: effectiveTraceId,
         };
 
         const result = await Mesh.Call(plan.nodeId, payload);
@@ -203,38 +326,30 @@ export class Executor {
           const remoteRoot = result.trace[result.trace.length - 1];
           currentTrace.children = remoteRoot.children;
           currentTrace.durationMs = remoteRoot.durationMs;
+          currentTrace.durationMs = remoteRoot.durationMs;
           currentTrace.status = remoteRoot.status;
+          currentTrace.outcome = remoteRoot.outcome;
         }
 
-        this.onExecutionEnd(fnName, "remote", Date.now() - startTime);
+        // --- LIFECYCLE: END (Remote) ---
+        this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
         return result;
       }
 
       const source = await Registry.Resolve(fnName);
 
       // 4. Authorization Check
-      if (source.permissions && source.permissions.allow.length > 0) {
-        if (!identity || !identity.role || !source.permissions.allow.includes(identity.role)) {
-          currentTrace.status = "error";
-          throw {
-            error: "FORBIDDEN",
-            function: fnName,
-            required: source.permissions.allow,
-            trace: traceArray
-          };
-        }
-      }
+      PolicyEngine.Enforce(fnName, identity, source, effectiveTraceId);
 
       const handler = source.handler;
       if (!handler && source.type !== "wasm") {
-          // Future: Implement DynamicRuntime for source.content
-          throw new Error("DYNAMIC_EXECUTION_NOT_YET_IMPLEMENTED");
+          throw new ChainboxError("INTERNAL_ERROR", "Dynamic execution from strings is not supported", fnName, effectiveTraceId);
       }
       
       const ctx: Ctx = Context.Build(
         input,
         async (nextFn, nextInput, opt) => {
-            const res = await this._InternalExecute(nextFn, nextInput, [currentTrace], identity, frame, forceLocal);
+            const res = await this._InternalExecute(nextFn, nextInput, [currentTrace], identity, frame, forceLocal, effectiveTraceId);
             // After sub-call, we can extract the trace from the result if we want to build the tree
             if (res && res._trace) {
                 currentTrace.children!.push(res._trace);
@@ -248,8 +363,10 @@ export class Executor {
         this.kv,
         this.blob,
         currentTrace,
+        effectiveTraceId,
+        (name: string) => AdapterRegistry.Get(name),
         async (calls) => {
-          return await this._ParallelExecute(calls, traceArray, identity, frame, currentTrace, forceLocal);
+          return await this._ParallelExecute(calls, traceArray, identity, frame, currentTrace, forceLocal, effectiveTraceId);
         }
       );
       
@@ -261,11 +378,10 @@ export class Executor {
       // 5. Execution Boundary (Runtime abstraction) with actual timeout enforcement
       let timer: any;
       const timeoutPromise = new Promise((_, reject) => {
-        timer = setTimeout(() => reject({ 
-          error: "EXECUTION_TIMEOUT", 
-          timeoutMs: frame.timeoutMs,
-          trace: traceArray 
-        }), frame.timeoutMs - elapsed);
+        timer = setTimeout(() => {
+          currentTrace.outcome = "TIMEOUT";
+          reject(new ChainboxError("EXECUTION_TIMEOUT", `Execution timed out after ${frame.timeoutMs}ms`, fnName, effectiveTraceId, { timeoutMs: frame.timeoutMs }));
+        }, frame.timeoutMs - elapsed);
       });
 
       const result = await Promise.race([
@@ -277,24 +393,11 @@ export class Executor {
 
       if (timer) clearTimeout(timer);
       
-      currentTrace.status = "success";
-      currentTrace.durationMs = Date.now() - startTime;
-      this.onExecutionEnd(fnName, "local", currentTrace.durationMs);
-
-      // Audit: Log success (only at root level)
-      if (!parentFrame) {
-        AuditLog.LogSuccess(fnName, identity, currentTrace.durationMs);
-      }
-
-      // Telemetry: End span and record latency
-      Telemetry.EndSpan(spanContext, { "chainbox.status": "success" });
-      Telemetry.RecordHistogram("chainbox_execution_duration_ms", currentTrace.durationMs!, { function: fnName });
-
       // Cache: Store result for cacheable functions
       Cache.Set(fnName, input, result);
 
-      // Tenant: Record call for quota tracking
-      TenantManager.RecordCall(identity, true);
+      // --- LIFECYCLE: END (Local) ---
+      this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
 
       // Final result includes the _trace hiddenly for internal tree building
       const finalResult = {
@@ -323,33 +426,12 @@ export class Executor {
       return finalResult;
 
     } catch (error: any) {
-      if (error.error && parentFrame) throw error;
+      if (error instanceof ChainboxError && parentFrame) throw error; // Re-throw ChainboxErrors up the stack
 
-      // 6. Error Normalization
-      const normalizedError = {
-        error: error.error || "EXECUTION_ERROR",
-        message: error.message || (typeof error === 'string' ? error : undefined),
-        function: error.function || fnName,
-        trace: process.env.NODE_ENV === 'production' ? [] : (error.trace || traceArray),
-        ...(error.limit && { limit: error.limit }),
-        ...(error.timeoutMs && { timeoutMs: error.timeoutMs }),
-        ...(error.required && { required: error.required })
-      };
-
-      if (normalizedError.error === "EXECUTION_ERROR") {
-        console.error(`chainbox: Execution error in "${fnName}"`, error);
-      }
-
-      // Audit: Log error (only at root level)
-      if (!parentFrame) {
-        AuditLog.LogError(fnName, normalizedError.error, identity, Date.now() - startTime);
-      }
-
-      // Telemetry: End span with error and increment error counter
-      Telemetry.EndSpanWithError(spanContext, normalizedError.error);
-      Telemetry.IncrementCounter("chainbox_execution_errors_total", { function: fnName, error: normalizedError.error });
-
-      throw normalizedError;
+      // --- LIFECYCLE: FAILURE ---
+      const normalized = this.onFailure(fnName, error, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
+      
+      throw normalized;
     }
   }
 
@@ -362,7 +444,8 @@ export class Executor {
     identity: Identity | undefined,
     frame: ExecutionFrame,
     currentFrame: TraceFrame,
-    forceLocal: boolean = false
+    forceLocal: boolean = false,
+    traceId: string
   ): Promise<any[]> {
     const isRemoteNode = process.env.CHAINBOX_IS_NODE === "true";
 
@@ -386,21 +469,18 @@ export class Executor {
       }
     }
 
-    console.log(`chainbox: _ParallelExecute - Grouped into ${batches.size} batches and ${locals.length} locals`);
-
     // 2. Concurrent execution of batches and locals
     const remoteExecution = Array.from(batches.entries()).map(async ([nodeId, list]) => {
-      console.log(`chainbox: Sending batch of ${list.length} calls to ${nodeId}`);
       const payload: MeshBatchPayload = {
         calls: list.map(l => ({ fn: l.fn, input: l.input })),
         identity,
         frame, // Propagate existing frame, sub-calls will increment depth
-        trace: [currentFrame]
+        trace: [currentFrame],
+        traceId: traceId,
       };
 
       try {
         const batchResults = await Mesh.BatchCall(nodeId, payload);
-        console.log(`chainbox: Received batch response with ${batchResults.length} results`);
         batchResults.forEach((res, i) => {
           const task = list[i];
           if (res && res._trace) {
@@ -410,16 +490,15 @@ export class Executor {
           results[task.index] = res;
         });
       } catch (error: any) {
-        console.error(`chainbox: Batch call to ${nodeId} failed`, error);
         list.forEach(task => {
-          results[task.index] = { error: error.error || "BATCH_FAILED", message: error.message };
+          results[task.index] = new ChainboxError("MESH_CALL_FAILED", error.message || "Batch call failed", task.fn, traceId, { nodeId });
         });
       }
     });
 
     const localExecution = locals.map(async (l) => {
       try {
-        const res = await this._InternalExecute(l.fn, l.input, [currentFrame], identity, frame, true);
+        const res = await this._InternalExecute(l.fn, l.input, [currentFrame], identity, frame, true, traceId);
         if (res && res._trace) {
           currentFrame.children!.push(res._trace);
           delete res._trace;

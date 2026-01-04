@@ -5,6 +5,7 @@ export type CodeSource = {
   type: "ts" | "js" | "wasm";
   content: string | Buffer;
   handler?: any;
+  permissions?: { allow: string[] };
 };
 
 /**
@@ -46,8 +47,8 @@ export class Registry {
     const wasmPath = targetPath + ".wasm";
     
     // Check for WASM first (prefer implementation if mixed, or strict priority)
-    // Actually standard is TS/JS first for ease, but logic needs to support both.
-    
+    // Check for WASM first (prefer implementation if mixed, or strict priority)
+
     // 1. Try TS/JS
     if (require('fs').existsSync(tsPath)) {
        try {

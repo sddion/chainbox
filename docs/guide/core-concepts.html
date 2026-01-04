@@ -75,6 +75,10 @@
                         <li><a href="getting-started.html" class="block hover:text-white transition-colors">Getting
                                 Started</a></li>
                         <li><a href="core-concepts.html" class="block text-brand font-medium">Core Concepts</a></li>
+                        <li><a href="architecture.html"
+                                class="block hover:text-white transition-colors">Architecture</a></li>
+                        <li><a href="client-sdk.html" class="block hover:text-white transition-colors">Client SDK</a>
+                        </li>
                         <li><a href="execution-context.html" class="block hover:text-white transition-colors">Execution
                                 Context</a></li>
                         <li><a href="capability-chaining.html"
@@ -104,7 +108,8 @@
                 <article class="prose prose-invert max-w-none">
                     <h1>Core Concepts</h1>
                     <p>Chainbox flips the traditional API model on its head. Instead of defining endpoints, you define
-                        <strong>Capabilities</strong>.</p>
+                        <strong>Capabilities</strong>.
+                    </p>
 
                     <h2>Capabilities</h2>
                     <p>Capabilities are pure functions that take an input and an execution context.</p>
@@ -115,7 +120,8 @@
 
                     <h2>No API Layer</h2>
                     <p>Chainbox uses <strong>File-System Routing</strong> to map capabilities to functions. A file at
-                        <code>src/app/_chain/user/create.ts</code> becomes the <code>user.create</code> capability.</p>
+                        <code>src/app/_chain/user/create.ts</code> becomes the <code>user.create</code> capability.
+                    </p>
 
                     <h2>The <code>Call()</code> Function</h2>
                     <p>The primary way to interact with Chainbox is via the <code>Call</code> function.</p>

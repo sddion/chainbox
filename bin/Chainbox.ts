@@ -3,13 +3,15 @@ import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 import { ChainboxNode } from "../node/Server";
+import { MigrationScanner } from "./migrate";
+import { Doctor } from "./doctor";
 
 const program = new Command();
 
 program
   .name("chainbox")
-  .description("CLI for Chainbox - Execution-first backend framework")
-  .version("0.8.0");
+  .description("Chainbox CLI")
+  .version("0.9.3");
 
 program
   .command("init")
@@ -71,6 +73,62 @@ program
   .action((options) => {
     const port = parseInt(options.port);
     ChainboxNode.Start(port);
+  });
+
+program
+  .command("migrate")
+  .description("Scan project for API routes and suggest Chainbox migrations")
+  .argument("[dir]", "Directory to scan", ".")
+  .action(async (dir) => {
+    await MigrationScanner.Scan(dir);
+  });
+
+program
+  .command("doctor")
+  .description("Check your environment for common issues")
+  .action(() => {
+    Doctor();
+  });
+
+program
+  .command("trace")
+  .description("Inspect an execution trace by ID (Development only)")
+  .argument("<traceId>", "Trace ID to locate")
+  .action(async (traceId) => {
+    const logFile = path.join(process.cwd(), ".chainbox", "trace.log");
+    
+    if (!fs.existsSync(logFile)) {
+      console.error("chainbox: No trace logs found in .chainbox/trace.log");
+      return;
+    }
+
+    const { createInterface } = await import("readline");
+    const fileStream = fs.createReadStream(logFile);
+    const rl = createInterface({ input: fileStream, crlfDelay: Infinity });
+
+    let found = false;
+    for await (const line of rl) {
+      if (!line.trim()) continue;
+      try {
+        const entry = JSON.parse(line);
+        if (entry.traceId === traceId) {
+          found = true;
+          console.log(`\n🔎 Trace Found: ${traceId}\n`);
+          console.log(`Fon: ${entry.function}`);
+          console.log(`Status: ${entry.status}`);
+          console.log(`Duration: ${entry.durationMs}ms`);
+          console.log(`Identity: ${entry.identity || "anonymous"}`);
+          if (entry.error) console.log(`Error: ${entry.error}`);
+          console.log("\nExecution Tree:");
+          console.log(JSON.stringify(entry.trace, null, 2));
+          break;
+        }
+      } catch {}
+    }
+
+    if (!found) {
+      console.error(`chainbox: Trace ${traceId} not found in logs.`);
+    }
   });
 
 program.parse();

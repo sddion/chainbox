@@ -1,4 +1,6 @@
 import { Identity, TraceFrame } from "./Context";
+import fs from "fs";
+import path from "path";
 
 /**
  * AuditEntry represents a single audit log entry.
@@ -12,6 +14,8 @@ export type AuditEntry = {
   durationMs: number;
   error?: string;
   metadata?: Record<string, any>;
+  traceId?: string;
+  trace?: TraceFrame;
 };
 
 /**
@@ -26,6 +30,15 @@ export class AuditLog {
   private static level = process.env.CHAINBOX_AUDIT_LEVEL || "all";
   private static logs: AuditEntry[] = [];
   private static maxLogs = 1000;
+  private static logFile = path.join(process.cwd(), ".chainbox", "trace.log");
+
+  // Ensure log directory exists
+  private static ensureLogDir() {
+    const dir = path.dirname(this.logFile);
+    if (!fs.existsSync(dir)) {
+      try { fs.mkdirSync(dir, { recursive: true }); } catch {}
+    }
+  }
 
   /**
    * Log an execution event.
@@ -47,10 +60,17 @@ export class AuditLog {
     this.logs.push(fullEntry);
 
     // Structured JSON output to stdout
-    console.log(JSON.stringify({
+    const jsonLog = JSON.stringify({
       type: "chainbox_audit",
       ...fullEntry,
-    }));
+    });
+    console.log(jsonLog);
+
+    // Persist to local file for CLI inspection (Dev/Test only)
+    if (process.env.NODE_ENV !== "production") {
+      this.ensureLogDir();
+      fs.appendFile(this.logFile, jsonLog + "\n", () => {});
+    }
   }
 
   /**
@@ -60,7 +80,9 @@ export class AuditLog {
     fnName: string,
     identity?: Identity,
     durationMs: number = 0,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
+    traceId?: string,
+    trace?: TraceFrame
   ): void {
     this.Log({
       function: fnName,
@@ -69,6 +91,8 @@ export class AuditLog {
       status: "success",
       durationMs,
       metadata,
+      traceId,
+      trace
     });
   }
 
@@ -80,7 +104,9 @@ export class AuditLog {
     error: string,
     identity?: Identity,
     durationMs: number = 0,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
+    traceId?: string,
+    trace?: TraceFrame
   ): void {
     this.Log({
       function: fnName,
@@ -90,6 +116,8 @@ export class AuditLog {
       durationMs,
       error,
       metadata,
+      traceId,
+      trace
     });
   }
 
@@ -101,7 +129,7 @@ export class AuditLog {
   }
 
   /**
-   * Clear all logs (for testing).
+   * Clear all logs.
    */
   public static Clear(): void {
     this.logs = [];

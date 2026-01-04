@@ -124,23 +124,19 @@ export class ExecutionPlanner {
       // If pool specified but no healthy nodes, fall back to global routes or local
     }
 
-    console.log(`chainbox: Planning execution for "${fnName}". Nodes: ${this.nodes.size}, Routes: ${this.routes.length}`);
+    // console.log(`chainbox: Planning execution for "${fnName}". Nodes: ${this.nodes.size}, Routes: ${this.routes.length}`);
 
     // Find matching route
     for (const route of this.routes) {
-      console.log(`chainbox: Checking route ${route.pattern} against ${fnName}`);
       if (route.pattern.test(fnName)) {
-        console.log(`chainbox: Match found! Targets: ${route.nodeIds.join(", ")}`);
         // Collect all healthy nodes for this route
         const healthyNodes = route.nodeIds
           .map(id => {
             const node = this.nodes.get(id);
-            if (!node) console.log(`chainbox: Node ID "${id}" not found in registry`);
+            if (!node) { /* console.warn(`chainbox: Node ID "${id}" not found in registry`); */ }
             return node;
           })
           .filter(node => node && node.healthy) as MeshNode[];
-
-        console.log(`chainbox: Healthy nodes for route: ${healthyNodes.length}`);
 
         if (healthyNodes.length > 0) {
           // Load balancing: Random selection

@@ -1,7 +1,8 @@
-import { Identity, ExecutionFrame, TraceFrame } from "../core/Context";
+import { Identity, ExecutionFrame, TraceFrame, ChainboxError } from "../core/Context";
 import { ExecutionPlanner } from "../core/ExecutionPlanner";
 import { Client, Pool } from "undici";
 import { RequestSigner } from "../core/RequestSigner";
+import { Telemetry } from "../core/Telemetry";
 
 /**
  * MeshPayload is the serializable data sent between nodes.
@@ -12,6 +13,7 @@ export type MeshPayload = {
   identity?: Identity;
   frame: ExecutionFrame;
   trace: TraceFrame[];
+  traceId: string;
 };
 
 /**
@@ -22,6 +24,7 @@ export type MeshBatchPayload = {
   identity?: Identity;
   frame: ExecutionFrame;
   trace: TraceFrame[];
+  traceId: string;
 };
 
 /**
@@ -90,7 +93,9 @@ export class CircuitBreaker {
           circuit.state = "HALF_OPEN";
           circuit.lastStateChange = Date.now();
           circuit.successes = 0;
-          console.log(`chainbox: Circuit for ${nodeId} is now HALF_OPEN (testing)`);
+          circuit.lastStateChange = Date.now();
+          circuit.successes = 0;
+          Telemetry.IncrementCounter("chainbox_circuit_state_change", { node: nodeId, state: "HALF_OPEN" });
           return true;
         }
         return false;
@@ -115,7 +120,8 @@ export class CircuitBreaker {
         circuit.state = "CLOSED";
         circuit.failures = 0;
         circuit.lastStateChange = Date.now();
-        console.log(`chainbox: Circuit for ${nodeId} is now CLOSED (recovered)`);
+        circuit.lastStateChange = Date.now();
+        Telemetry.IncrementCounter("chainbox_circuit_state_change", { node: nodeId, state: "CLOSED" });
       }
     } else if (circuit.state === "CLOSED") {
       // Reset failure count on success
@@ -135,11 +141,15 @@ export class CircuitBreaker {
       // Immediate open on failure during half-open
       circuit.state = "OPEN";
       circuit.lastStateChange = Date.now();
-      console.log(`chainbox: Circuit for ${nodeId} is now OPEN (half-open test failed)`);
+      circuit.state = "OPEN";
+      circuit.lastStateChange = Date.now();
+      Telemetry.IncrementCounter("chainbox_circuit_state_change", { node: nodeId, state: "OPEN", reason: "half_open_failed" });
     } else if (circuit.state === "CLOSED" && circuit.failures >= CIRCUIT_CONFIG.threshold) {
       circuit.state = "OPEN";
       circuit.lastStateChange = Date.now();
-      console.log(`chainbox: Circuit for ${nodeId} is now OPEN (threshold reached: ${circuit.failures} failures)`);
+      circuit.state = "OPEN";
+      circuit.lastStateChange = Date.now();
+      Telemetry.IncrementCounter("chainbox_circuit_state_change", { node: nodeId, state: "OPEN", reason: "threshold_reached" });
     }
   }
 
@@ -160,6 +170,12 @@ export class CircuitBreaker {
 
 /**
  * Mesh transport calls functions on remote Chainbox nodes with circuit breaker protection.
+ * 
+ * SECURITY NOTE:
+ * The Mesh transport is designed for TRUSTED INTRANET communication.
+ * It assumes all nodes share a secret (CHAINBOX_MESH_SECRET) and are running within
+ * a private network (VPC/Overlay). Do not expose Mesh ports to the public internet
+ * without a VPN or mTLS tunnel.
  */
 export class Mesh {
   private static MAX_RETRIES = 3;
@@ -189,12 +205,13 @@ export class Mesh {
 
     // Circuit Breaker Check
     if (!CircuitBreaker.IsAllowed(nodeId)) {
-      throw {
-        error: "CIRCUIT_OPEN",
-        nodeUrl,
-        function: payload.fn,
-        message: `Circuit breaker is OPEN for node ${nodeId}. Try again later.`,
-      };
+      throw new ChainboxError(
+        "CIRCUIT_OPEN",
+        `Circuit breaker is OPEN for node ${nodeId}. Try again later.`,
+        payload.fn,
+        payload.traceId,
+        { nodeUrl }
+      );
     }
 
     const pool = this.GetPool(nodeUrl);
@@ -250,14 +267,18 @@ export class Mesh {
     }
 
     // All retries exhausted
-    throw {
-      error: "MESH_CALL_FAILED",
-      nodeUrl,
-      function: payload.fn,
-      attempts: this.MAX_RETRIES,
-      circuitState: CircuitBreaker.GetState(nodeId),
-      lastError: lastError?.message || lastError,
-    };
+    throw new ChainboxError(
+      "MESH_CALL_FAILED",
+      `Mesh call failed after ${this.MAX_RETRIES} attempts`,
+      payload.fn,
+      payload.traceId,
+      {
+        nodeUrl,
+        attempts: this.MAX_RETRIES,
+        circuitState: CircuitBreaker.GetState(nodeId),
+        lastError: lastError?.message || lastError,
+      }
+    );
   }
 
   /**
@@ -267,12 +288,13 @@ export class Mesh {
     const nodeId = this.GetNodeIdFromUrl(nodeUrl);
 
     if (!CircuitBreaker.IsAllowed(nodeId)) {
-      throw {
-        error: "CIRCUIT_OPEN",
-        nodeUrl,
-        batch: true,
-        message: `Circuit breaker is OPEN for node ${nodeId}.`,
-      };
+      throw new ChainboxError(
+        "CIRCUIT_OPEN",
+        `Circuit breaker is OPEN for node ${nodeId}.`,
+        "batch",
+        payload.traceId,
+        { nodeUrl }
+      );
     }
 
     const pool = this.GetPool(nodeUrl);

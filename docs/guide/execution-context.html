@@ -74,6 +74,10 @@
                                 Started</a></li>
                         <li><a href="core-concepts.html" class="block hover:text-white transition-colors">Core
                                 Concepts</a></li>
+                        <li><a href="architecture.html"
+                                class="block hover:text-white transition-colors">Architecture</a></li>
+                        <li><a href="client-sdk.html" class="block hover:text-white transition-colors">Client SDK</a>
+                        </li>
                         <li><a href="execution-context.html" class="block text-brand font-medium">Execution Context</a>
                         </li>
                         <li><a href="capability-chaining.html"
@@ -114,12 +118,19 @@
         options?: { retries?: <span class="text-yellow-400">number</span> },
     ) => <span class="text-yellow-400">Promise</span><<span class="text-yellow-400">any</span>>;
     parallel: (calls: { fn: <span class="text-yellow-400">string</span>; input?: <span class="text-yellow-400">any</span> }[]) => <span class="text-yellow-400">Promise</span><<span class="text-yellow-400">any</span>[]>;
+    adapter: <<span class="text-yellow-400">T</span>>(name: <span class="text-yellow-400">string</span>) => <span class="text-yellow-400">T</span>;
     identity?: <span class="text-yellow-400">Identity</span>;
     db?: <span class="text-yellow-400">any</span>;
     kv: <span class="text-yellow-400">StorageAdapter</span>;
     blob: <span class="text-yellow-400">StorageAdapter</span>;
     env: <span class="text-yellow-400">Record</span><<span class="text-yellow-400">string</span>, <span class="text-yellow-400">string</span> | <span class="text-purple-400">undefined</span>>;
 };</code></pre>
+                    </div>
+
+                    <h2>External Adapters (Secure I/O)</h2>
+                    <p>Direct network calls are blocked. Use <code>ctx.adapter()</code> to access allowed services.</p>
+                    <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
+                        <pre><code><span class="text-purple-400">const</span> stripe = ctx.<span class="text-blue-400">adapter</span><<span class="text-yellow-400">Stripe</span>>(<span class="text-green-400">"stripe"</span>);</code></pre>
                     </div>
 
                     <h2>Storage Adapters</h2>

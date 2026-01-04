@@ -28,8 +28,8 @@ export class WasmRuntime implements ExecutionRuntime {
              console.log(`[WASM] Calling Host Function: ${name}`, input);
              
              // In a blocking WASM environment, we can't await this directly without unwinding stack.
-             // We'll throw to indicate that for now, only pure logic is supported in this runtime.
-             throw new Error("WASM_SYNC_CALL_NOT_SUPPORTED: proper stack switching required");
+             // Only pure logic is supported in this runtime.
+             throw new Error("WASM_HOST_CALLS_NOT_SUPPORTED");
         },
         chainbox_log: (ptr: number, len: number) => {
             const mem = new Uint8Array(memory.buffer);

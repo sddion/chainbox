@@ -2,6 +2,7 @@ import http from "http";
 import { Executor } from "../core/Executor";
 import { MeshPayload, MeshBatchPayload } from "../transport/Mesh";
 import { RequestSigner } from "../core/RequestSigner";
+import { ChainboxError } from "../core/Context";
 
 // Automatically mark this process as a mesh node
 process.env.CHAINBOX_IS_NODE = "true";
@@ -56,34 +57,37 @@ export class ChainboxNode {
 
           if (isBatch) {
             const batch = payload as MeshBatchPayload;
-            console.log(`chainbox-node: Batch execution of ${batch.calls.length} functions`);
+            // console.log(`chainbox-node: Batch execution of ${batch.calls.length} functions`);
             
             try {
               const results = await Promise.all(batch.calls.map(call => 
-                Executor.Execute(call.fn, call.input, batch.trace, batch.identity, batch.frame, true)
+                Executor.Execute(call.fn, call.input, batch.trace, batch.identity, batch.frame, true, { traceId: batch.traceId })
               ));
               
               res.writeHead(200, { "Content-Type": "application/json" });
               res.end(JSON.stringify({ results }));
             } catch (error: any) {
-              this.SendError(res, error.error || "BATCH_EXECUTION_ERROR", error.message);
+              const code = error instanceof ChainboxError ? error.code : "BATCH_EXECUTION_ERROR";
+              this.SendError(res, code, error.message);
             }
           } else {
             const single = payload as MeshPayload;
             try {
-              console.log(`chainbox-node: Executing "${single.fn}" (identity: ${single.identity?.id || "anonymous"})`);
+              // console.log(`chainbox-node: Executing "${single.fn}" (identity: ${single.identity?.id || "anonymous"})`);
               const result = await Executor.Execute(
                 single.fn,
                 single.input,
                 single.trace,
                 single.identity,
                 single.frame,
-                true
+                true,
+                { traceId: single.traceId }
               );
               res.writeHead(200, { "Content-Type": "application/json" });
               res.end(JSON.stringify(result));
             } catch (error: any) {
-              this.SendError(res, error.error || "EXECUTION_ERROR", error.message, 500, single.fn);
+              const code = error instanceof ChainboxError ? error.code : (error.error || "EXECUTION_ERROR");
+              this.SendError(res, code, error.message, 500, single.fn);
             }
           }
         });
