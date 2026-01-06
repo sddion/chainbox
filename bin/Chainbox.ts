@@ -5,6 +5,7 @@ import path from "path";
 import { ChainboxNode } from "../node/Server";
 import { MigrationScanner } from "./migrate";
 import { Doctor } from "./doctor";
+import { Init } from "./init";
 
 const program = new Command();
 
@@ -15,9 +16,10 @@ program
 
 program
   .command("init")
-  .description("Initialize a new Chainbox project")
-  .action(() => {
-    console.log("chainbox: Initializing project...");
+  .description("Initialize a new Chainbox project (creates chainbox.config.ts)")
+  .action(async () => {
+    await Init();
+    // Also create the struct if not exists
     const dirs = ["src/app/_chain"];
     dirs.forEach(dir => {
       if (!fs.existsSync(dir)) {
@@ -25,7 +27,6 @@ program
         console.log(`  created ${dir}`);
       }
     });
-    console.log("chainbox: Done! Create your first function in src/app/_chain/Hello.ts");
   });
 
 program

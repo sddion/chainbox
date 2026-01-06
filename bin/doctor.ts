@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { loadConfig } from "../tools/Config";
 
 export async function Doctor() {
   console.log("\n🩺 Chainbox Doctor\n");
@@ -43,7 +44,12 @@ export async function Doctor() {
   }
 
   // 3. Check Project Structure
-  const chainDir = path.join(process.cwd(), "src", "app", "_chain");
+  const config = await loadConfig();
+  if (config.functionsDir !== "src/app/_chain") {
+    console.log(`ℹ️  Using custom chain directory: ${config.functionsDir}`);
+  }
+
+  const chainDir = path.join(process.cwd(), config.functionsDir || "src/app/_chain");
   if (!fs.existsSync(chainDir)) {
     console.error(`❌ Missing Function Directory: src/app/_chain`);
     issues++;

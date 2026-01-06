@@ -52,6 +52,7 @@
     },
     "./client": {
       "types": "./dist/client/index.d.ts",
+      "react-native": "./dist/client/index.js",
       "import": "./dist/client/index.js",
       "require": "./dist/client/index.js"
     },

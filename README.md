@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/sddion/chainbox/blob/main/docs/public/logo-raw.png?raw=true" alt="Chainbox Logo" width="300" height="200" />
+  <img src="https://github.com/sddion/chainbox/blob/main/docs/public/logo-raw.png?raw=true" alt="Chainbox Logo" width="300" height="300" />
 </p>
 
 # Chainbox
