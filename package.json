@@ -13,7 +13,17 @@
     "framework",
     "execution",
     "serverless",
-    "typescript"
+    "typescript",
+    "rpc-less",
+    "distributed-execution",
+    "capabilities",
+    "zero-trust",
+    "security-by-deletion",
+    "api-less",
+    "mesh",
+    "hono",
+    "vite",
+    "express"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -25,7 +35,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:browser",
     "build:browser": "esbuild client/Browser.ts --bundle --minify --outfile=dist/chainbox.min.js --format=iife --global-name=Chainbox && esbuild client/Browser.ts --bundle --outfile=dist/chainbox.js --format=iife --global-name=Chainbox",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build"
