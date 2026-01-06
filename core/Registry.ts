@@ -14,13 +14,20 @@ export type CodeSource = {
 export class Registry {
   private static functionsDir = path.join(process.cwd(), "src", "app", "_chain");
 
+  private static cache = new Map<string, CodeSource & { permissions?: { allow: string[] } }>();
+
   public static SetRoot(dir: string) {
     this.functionsDir = path.resolve(process.cwd(), dir);
+    this.cache.clear(); // Clear cache on root change
   }
 
   // ...
 
   public static async Resolve(fnName: string): Promise<CodeSource & { permissions?: { allow: string[] } }> {
+    if (this.cache.has(fnName)) {
+      return this.cache.get(fnName)!;
+    }
+
     // ...
     const parts = fnName.split(".");
     let targetPath = path.join(this.functionsDir, ...parts);
@@ -44,12 +51,14 @@ export class Registry {
         const loader = jiti(process.cwd(), { cache: false, interopDefault: true });
         const module = loader(filePath);
         const handler = module.default || module;
-        return {
-          type: "js",
+        const result = {
+          type: "js" as const, // Explicit const assertion for type safety
           content: "",
           handler: handler, 
           permissions: module.permissions,
         };
+        this.cache.set(fnName, result);
+        return result;
        } catch (error: any) {
         console.error(`chainbox: Error loading function "${fnName}" at ${filePath}`, error);
         throw new Error("FUNCTION_LOAD_ERROR");
@@ -60,11 +69,13 @@ export class Registry {
     if (require('fs').existsSync(wasmPath)) {
       try {
         const content = require('fs').readFileSync(wasmPath);
-        return {
-          type: "wasm",
+        const result = {
+          type: "wasm" as const,
           content: content,
           permissions: { allow: [] } // Metadata sidecar could supply permissions later
         };
+        this.cache.set(fnName, result);
+        return result;
       } catch (error: any) {
         console.error(`chainbox: Error loading WASM function "${fnName}" at ${wasmPath}`, error);
         throw new Error("WASM_LOAD_ERROR");

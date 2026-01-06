@@ -4,7 +4,7 @@ import { Context, Identity, TraceFrame, ExecutionFrame, ExecutionTarget, Ctx, Ch
 import { DbAdapter } from "./DbAdapter";
 import { ExecutionPlanner } from "./ExecutionPlanner";
 import { Mesh, MeshPayload, MeshBatchPayload } from "../transport/Mesh";
-import { StorageAdapter, InMemoryStorage } from "./Storage";
+import { StorageAdapter, FileSystemStorage } from "./Storage";
 import { WasmRuntime } from "./WasmRuntime";
 import { RateLimiter } from "./RateLimiter";
 import { AuditLog } from "./AuditLog";
@@ -59,8 +59,8 @@ export class Executor {
     secretKey: this.sbConfig.key
   });
 
-  private static kv: StorageAdapter = new InMemoryStorage();
-  private static blob: StorageAdapter = new InMemoryStorage();
+  private static kv: StorageAdapter = new FileSystemStorage("kv");
+  private static blob: StorageAdapter = new FileSystemStorage("blob");
 
   private static runtime: ExecutionRuntime = new NodeRuntime();
   private static wasmRuntime: ExecutionRuntime = new WasmRuntime();
@@ -101,8 +101,10 @@ export class Executor {
       try {
         return await this._InternalExecute(fnName, input, parentTrace, resolvedIdentity, parentFrame, forceLocal, traceId);
       } catch (error: any) {
-        if (attempts >= maxAttempts || (error.code === "FORBIDDEN") || (error.code === "MAX_CALL_DEPTH_EXCEEDED")) {
-          throw error;
+        const cbError = error instanceof ChainboxError ? error : new ChainboxError("EXECUTION_ERROR", error.message || "Unknown error", fnName, traceId, { original: error });
+
+        if (attempts >= maxAttempts || (cbError.code === "FORBIDDEN") || (cbError.code === "MAX_CALL_DEPTH_EXCEEDED") || (cbError.code === "ACCESS_DENIED")) {
+          throw cbError;
         }
         console.warn(`chainbox: Retrying ${fnName} (attempt ${attempts}/${maxAttempts})`);
       }
@@ -113,12 +115,12 @@ export class Executor {
    * Lifecycle Hook: Execution Start
    * Handles Telemetry, Rate Limiting, and Tenant Enforcement.
    */
-  private static onStart(
+  private static async onStart(
     fnName: string,
     identity: Identity | undefined,
     frame: ExecutionFrame,
     parentFrame: ExecutionFrame | undefined
-  ): { spanContext: any } {
+  ): Promise<{ spanContext: any }> {
     // 1. Telemetry Start
     const spanContext = Telemetry.StartSpan(`chainbox.execute.${fnName}`, undefined, {
       "chainbox.function": fnName,
@@ -129,8 +131,8 @@ export class Executor {
 
     // 2. Policy Enforcement (Rate Limit & Tenant) - Only at root
     if (!parentFrame) {
-      RateLimiter.Enforce(fnName, identity?.id);
-      TenantManager.Enforce(identity);
+      await RateLimiter.Enforce(fnName, identity?.id);
+      await TenantManager.Enforce(identity);
     }
 
     return { spanContext };
@@ -140,7 +142,7 @@ export class Executor {
    * Lifecycle Hook: Execution End (Success)
    * Handles Telemetry (Success), Audit Log (Success), and Metrics.
    */
-  private static onEnd(
+  private static async onEnd(
     fnName: string,
     identity: Identity | undefined,
     currentTrace: TraceFrame,
@@ -172,14 +174,14 @@ export class Executor {
     }
 
     // 3. Tenant Usage
-    TenantManager.RecordCall(identity, true);
+    await TenantManager.RecordCall(identity, true);
   }
 
   /**
    * Lifecycle Hook: Execution Failure
    * Handles Error Normalization, Telemetry (Error), and Audit Log (Error).
    */
-  private static onFailure(
+  private static async onFailure(
     fnName: string,
     error: any,
     identity: Identity | undefined,
@@ -188,7 +190,7 @@ export class Executor {
     parentFrame: ExecutionFrame | undefined,
     startTime: number,
     effectiveTraceId: string
-  ): ChainboxError {
+  ): Promise<ChainboxError> {
     const duration = Date.now() - startTime;
     
     // 1. Error Normalization
@@ -271,7 +273,7 @@ export class Executor {
     // --- LIFECYCLE: START ---
     // Note: We create context *before* checking cache to ensure consistent telemetry even for cache hits (optional choice, but cleaner)
     // However, rate limits should probably strictly apply.
-    const { spanContext } = this.onStart(fnName, identity, frame, parentFrame);
+    const { spanContext } = await this.onStart(fnName, identity, frame, parentFrame);
     
     try {
       // 1. Safety Checks: Recursion Depth
@@ -291,7 +293,7 @@ export class Executor {
         
         // --- LIFECYCLE: END (Cache Hit) ---
         // We artificially call onEnd to record the 'success' of a cache hit, though duration is negligible
-        this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
+        await this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
         
         return { ...cachedResult, trace: [currentTrace] };
       }
@@ -338,7 +340,7 @@ export class Executor {
         }
 
         // --- LIFECYCLE: END (Remote) ---
-        this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
+        await this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
         return result;
       }
 
@@ -403,7 +405,7 @@ export class Executor {
       Cache.Set(fnName, input, result);
 
       // --- LIFECYCLE: END (Local) ---
-      this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
+      await this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
 
       // Final result includes the _trace hiddenly for internal tree building
       const finalResult = {
@@ -435,7 +437,7 @@ export class Executor {
       if (error instanceof ChainboxError && parentFrame) throw error; // Re-throw ChainboxErrors up the stack
 
       // --- LIFECYCLE: FAILURE ---
-      const normalized = this.onFailure(fnName, error, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
+      const normalized = await this.onFailure(fnName, error, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
       
       throw normalized;
     }

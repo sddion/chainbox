@@ -106,9 +106,9 @@
         <main class="flex-1 lg:pl-80 pr-6 xl:pr-12 pb-24">
             <article class="prose-premium max-w-4xl">
 
-                <h1>Getting Started</h1>
-                <p class="text-xl">Execute pure backend logic without building APIs. Chainbox gives you a
-                    capability-driven architecture ready for scale.</p>
+                <h1 class="text-white! font-black! -skew-x-1">The Cognitive Bridge</h1>
+                <p class="text-xl text-gray-400 font-light italic">"Stop building plumbing. Start building the bridge
+                    between your interface and your intelligence."</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-12">
                     <div
@@ -137,7 +137,14 @@
                     </div>
                 </div>
 
-                <h2>Installation</h2>
+                <div class="bg-brand-start/5 border-l-4 border-brand-start p-6 my-12 rounded-r-xl">
+                    <h4 class="text-white font-bold mb-2 uppercase tracking-tighter italic">The Post-API Reality:</h4>
+                    <p class="text-sm text-gray-300 mb-0 italic">"What if your browser already knew every backend
+                        capability existed? No endpoints to find. No documentation to hunt. Just an immediate, signed,
+                        and secure connection to your most powerful logic."</p>
+                </div>
+
+                <h2>Phase 1: Zero Setup</h2>
 
                 <div class="bg-[#0A0A0A] border border-white/5 rounded-xl overflow-hidden mb-8">
                     <div class="flex items-center border-b border-white/5 bg-white/5 px-4">
@@ -155,7 +162,7 @@
                     </div>
                 </div>
 
-                <h2>Configuration</h2>
+                <h2 class="mt-20">Phase 2: Defining Intuition</h2>
                 <p>Run the initialization command to generate your config file:</p>
 
                 <pre><code>npx chainbox init</code></pre>
@@ -180,13 +187,18 @@
 <span class="text-purple-400">export const</span> { POST } = <span class="text-blue-400">ChainboxRoute</span>();</code></pre>
 
                 <h2>Production Serving</h2>
-                <p>Deploy your frontend and backend as a single unit using the standalone server.</p>
-                <div class="relative group cursor-pointer">
+                <p>Deploy your frontend and backend as a single unit using the standalone server. This is perfect for
+                    the **Zero-Config CDN** approach.</p>
+                <div class="relative group cursor-pointer lg:w-3/4">
                     <div
                         class="absolute -inset-1 bg-linear-to-r from-brand-start to-brand-end rounded-xl opacity-20 group-hover:opacity-40 blur transition-all duration-500">
                     </div>
-                    <pre class="relative"><code>npx chainbox serve --port 4000 --static dist</code></pre>
+                    <pre
+                        class="relative"><code class="text-gray-300">npx chainbox serve --port 4000 --static dist</code></pre>
                 </div>
+                <p class="mt-4 text-sm text-gray-500 italic">Pro-tip: Combine this with <a href="client-sdk.html"
+                        class="text-brand hover:underline font-bold">Attribute-Driven Calls</a> to build sites with zero
+                    JavaScript boilerplate.</p>
 
                 <h2>Developer Tools</h2>
                 <p>Use the CLI to inspect your capabilities registry.</p>

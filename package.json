@@ -26,6 +26,8 @@
   ],
   "scripts": {
     "build": "tsc",
+    "build:browser": "esbuild client/Browser.ts --bundle --minify --outfile=dist/chainbox.min.js --format=iife --global-name=Chainbox",
+    "build:browser:full": "esbuild client/Browser.ts --bundle --outfile=dist/chainbox.js --format=iife --global-name=Chainbox",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run clean && npm run build"
   },
@@ -53,6 +55,7 @@
     "@types/range-parser": "^1.2.7",
     "@types/send": "^1.2.1",
     "@types/serve-static": "^2.2.0",
+    "esbuild": "^0.27.2",
     "ts-node": "^10.0.0",
     "typescript": "^5.0.0",
     "vite": "^7.3.0"

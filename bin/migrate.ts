@@ -18,7 +18,7 @@ export class MigrationScanner {
   private static results: ScanResult[] = [];
 
   public static async Scan(dir: string) {
-    console.log(`\n🔍 Scanning ${dir} for migration opportunities...\n`);
+    console.log(`\nScanning ${dir} for migration opportunities...\n`);
     this.results = [];
     await this.walk(dir);
     this.report();
@@ -94,19 +94,19 @@ export class MigrationScanner {
 
   private static report() {
     if (this.results.length === 0) {
-      console.log("✅ No legacy API patterns found! Your code looks Chainbox-ready.");
+      console.log("  No legacy API patterns found! Your code looks Chainbox-ready.");
       return;
     }
 
-    console.log(`⚠️  Found ${this.results.length} migration opportunities:\n`);
+    console.log(`  Found ${this.results.length} migration opportunities:\n`);
     
     this.results.forEach(r => {
-      console.log(`📄 ${r.file}:${r.line}`);
-      console.log(`   🔴 Found: ${r.match}`);
-      console.log(`   🟢 Suggestion: ${r.suggestion}`);
+      console.log(`  ${r.file}:${r.line}`);
+      console.log(`     Found: ${r.match}`);
+      console.log(`     Suggestion: ${r.suggestion}`);
       console.log("");
     });
 
-    console.log("💡 Tip: Logical Functions allow you to delete this boilerplate entirely.");
+    console.log("  Tip: Logical Functions allow you to delete this boilerplate entirely.");
   }
 }

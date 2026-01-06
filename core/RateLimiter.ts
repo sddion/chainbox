@@ -1,3 +1,5 @@
+import { FileSystemStorage } from "./Storage";
+
 /**
  * RateLimitConfig defines limits for a specific key (identity, function, tenant).
  */
@@ -48,10 +50,10 @@ function parseRateLimit(limit: string): RateLimitConfig {
  * 
  * Configuration via environment:
  * - CHAINBOX_RATE_LIMIT_DEFAULT: Default limit (e.g., "100/minute")
- * - CHAINBOX_RATE_LIMIT_<FUNCTION>: Function-specific limits (e.g., "User.Create" → "10/minute")
+ * - CHAINBOX_RATE_LIMIT_<FUNCTION>: Function-specific limits (e.g., "User.Create" -> "10/minute")
  */
 export class RateLimiter {
-  private static buckets: Map<string, RateLimitBucket> = new Map();
+  private static buckets = new FileSystemStorage("ratelimit");
   private static functionLimits: Map<string, RateLimitConfig> = new Map();
 
   /**
@@ -103,17 +105,16 @@ export class RateLimiter {
    * Check if a request is allowed under rate limits.
    * Returns true if allowed, false if rate limited.
    */
-  public static IsAllowed(fnName: string, identityId?: string): boolean {
+  public static async IsAllowed(fnName: string, identityId?: string): Promise<boolean> {
     const key = this.BuildKey(fnName, identityId);
     const limit = this.GetLimit(fnName, identityId);
     const now = Date.now();
 
-    let bucket = this.buckets.get(key);
+    let bucket: RateLimitBucket = await this.buckets.get(key);
 
     // Create new bucket if none exists or window expired
     if (!bucket || now - bucket.windowStart > limit.windowMs) {
       bucket = { count: 0, windowStart: now };
-      this.buckets.set(key, bucket);
     }
 
     // Check limit
@@ -123,16 +124,17 @@ export class RateLimiter {
 
     // Increment count
     bucket.count++;
+    await this.buckets.set(key, bucket);
     return true;
   }
 
   /**
    * Get remaining requests for a key.
    */
-  public static GetRemaining(fnName: string, identityId?: string): number {
+  public static async GetRemaining(fnName: string, identityId?: string): Promise<number> {
     const key = this.BuildKey(fnName, identityId);
     const limit = this.GetLimit(fnName, identityId);
-    const bucket = this.buckets.get(key);
+    const bucket: RateLimitBucket = await this.buckets.get(key);
 
     if (!bucket || Date.now() - bucket.windowStart > limit.windowMs) {
       return limit.maxRequests;
@@ -144,10 +146,10 @@ export class RateLimiter {
   /**
    * Get time until rate limit resets for a key.
    */
-  public static GetResetTime(fnName: string, identityId?: string): number {
+  public static async GetResetTime(fnName: string, identityId?: string): Promise<number> {
     const key = this.BuildKey(fnName, identityId);
     const limit = this.GetLimit(fnName, identityId);
-    const bucket = this.buckets.get(key);
+    const bucket: RateLimitBucket = await this.buckets.get(key);
 
     if (!bucket) {
       return 0;
@@ -160,15 +162,16 @@ export class RateLimiter {
   /**
    * Enforce rate limit, throwing if exceeded.
    */
-  public static Enforce(fnName: string, identityId?: string): void {
-    if (!this.IsAllowed(fnName, identityId)) {
+  public static async Enforce(fnName: string, identityId?: string): Promise<void> {
+    if (!await this.IsAllowed(fnName, identityId)) {
+      const resetMs = await this.GetResetTime(fnName, identityId);
       throw {
         error: "RATE_LIMITED",
         function: fnName,
         identity: identityId || "anonymous",
         remaining: 0,
-        resetMs: this.GetResetTime(fnName, identityId),
-        message: `Rate limit exceeded for ${fnName}. Try again in ${Math.ceil(this.GetResetTime(fnName, identityId) / 1000)}s.`,
+        resetMs,
+        message: `Rate limit exceeded for ${fnName}. Try again in ${Math.ceil(resetMs / 1000)}s.`,
       };
     }
   }

@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { Identity } from "./Context";
+import { Telemetry } from "./Telemetry";
 
 /**
  * Supabase Adapter with RLS forwarding.
@@ -29,6 +30,11 @@ export class DbAdapter {
       throw new Error("DB_NOT_CONFIGURED: Supabase credentials are missing. Set CHAINBOX_SUPABASE_URL and CHAINBOX_SUPABASE_SECRET_KEY.");
     }
 
+    Telemetry.IncrementCounter("chainbox_db_query_total", { table });
+    
+    // Note: We don't await the actual query here as we return the builder, 
+    // but we track the 'from' call which is the entry to a query.
+    
     // If an identity with a token is provided, create a scoped client to enforce RLS
     if (identity && identity.token) {
       const scopedClient = createClient(this.credentials.url!, this.credentials.secretKey!, {

@@ -44,7 +44,8 @@ export type ChainboxErrorType =
   | "MESH_CALL_FAILED"
   | "INVALID_SIGNATURE"
   | "ADAPTER_NOT_FOUND"
-  | "INTERNAL_ERROR";
+  | "INTERNAL_ERROR"
+  | "ACCESS_DENIED";
 
 export class ChainboxError extends Error {
   public readonly isChainboxError = true;

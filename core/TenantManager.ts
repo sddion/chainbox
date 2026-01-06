@@ -1,4 +1,5 @@
 import { Identity } from "./Context";
+import { FileSystemStorage } from "./Storage";
 
 /**
  * TenantConfig defines per-tenant resource limits and routing.
@@ -42,7 +43,7 @@ const DEFAULT_TENANT_CONFIG: TenantConfig = {
  */
 export class TenantManager {
   private static tenantConfigs: Map<string, TenantConfig> = new Map();
-  private static tenantQuotas: Map<string, TenantQuotaState> = new Map();
+  private static tenantQuotas = new FileSystemStorage("tenant_quotas");
   private static initialized = false;
 
   /**
@@ -86,13 +87,12 @@ export class TenantManager {
   /**
    * Get or initialize quota state for a tenant.
    */
-  private static GetQuotaState(tenantId: string): TenantQuotaState {
+  private static async GetQuotaState(tenantId: string): Promise<TenantQuotaState> {
     const now = Date.now();
-    let state = this.tenantQuotas.get(tenantId);
+    let state: TenantQuotaState = await this.tenantQuotas.get(tenantId);
 
     if (!state) {
       state = { callsThisMinute: 0, lastMinuteStart: now, totalCalls: 0, totalErrors: 0 };
-      this.tenantQuotas.set(tenantId, state);
     }
 
     // Reset if minute has passed
@@ -107,11 +107,11 @@ export class TenantManager {
   /**
    * Check if a tenant is allowed to make a call (quota enforcement).
    */
-  public static IsAllowed(identity?: Identity): boolean {
+  public static async IsAllowed(identity?: Identity): Promise<boolean> {
     this.Init();
     const tenantId = this.GetTenantId(identity);
     const config = this.GetConfig(tenantId);
-    const state = this.GetQuotaState(tenantId);
+    const state = await this.GetQuotaState(tenantId);
 
     return state.callsThisMinute < config.maxCallsPerMinute;
   }
@@ -119,20 +119,21 @@ export class TenantManager {
   /**
    * Record a call for quota tracking.
    */
-  public static RecordCall(identity?: Identity, success: boolean = true) {
+  public static async RecordCall(identity?: Identity, success: boolean = true) {
     const tenantId = this.GetTenantId(identity);
-    const state = this.GetQuotaState(tenantId);
+    const state = await this.GetQuotaState(tenantId);
 
     state.callsThisMinute++;
     state.totalCalls++;
     if (!success) state.totalErrors++;
+    await this.tenantQuotas.set(tenantId, state);
   }
 
   /**
    * Enforce tenant quota, throwing if exceeded.
    */
-  public static Enforce(identity?: Identity): void {
-    if (!this.IsAllowed(identity)) {
+  public static async Enforce(identity?: Identity): Promise<void> {
+    if (!await this.IsAllowed(identity)) {
       const tenantId = this.GetTenantId(identity);
       const config = this.GetConfig(tenantId);
       throw {
@@ -166,20 +167,21 @@ export class TenantManager {
   /**
    * Get quota usage statistics for a tenant.
    */
-  public static GetStats(tenantId: string): TenantQuotaState & { config: TenantConfig } {
+  public static async GetStats(tenantId: string): Promise<TenantQuotaState & { config: TenantConfig }> {
     const config = this.GetConfig(tenantId);
-    const state = this.GetQuotaState(tenantId);
+    const state = await this.GetQuotaState(tenantId);
     return { ...state, config };
   }
 
   /**
    * Get all tenant statistics (for monitoring).
    */
-  public static GetAllStats(): Record<string, TenantQuotaState & { config: TenantConfig }> {
+  public static async GetAllStats(): Promise<Record<string, TenantQuotaState & { config: TenantConfig }>> {
     this.Init();
     const result: Record<string, any> = {};
-    for (const [tenantId] of this.tenantQuotas) {
-      result[tenantId] = this.GetStats(tenantId);
+    const tenantIds = await this.tenantQuotas.list();
+    for (const tenantId of tenantIds) {
+      result[tenantId] = await this.GetStats(tenantId);
     }
     return result;
   }

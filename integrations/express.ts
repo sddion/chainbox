@@ -62,13 +62,16 @@ export function ChainboxMiddleware(options: ChainboxMiddlewareOptions = {}) {
       }
 
       // 4. Execution
+      const token = req.headers["authorization"]?.replace("Bearer ", "");
+      
       const result = await Executor.Execute(
         body.fn,
         body.input,
         [], // trace
-        undefined, // identity (TODO: Extract from headers if needed)
+        undefined, // identity (resolved via token option)
         undefined, // frame
-        true // forceLocal: Express is usually the server itself
+        true, // forceLocal
+        { token } as any // Pass token for internal resolution
       );
 
       res.status(200).json(result);

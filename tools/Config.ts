@@ -36,7 +36,7 @@ export async function loadConfig(cwd: string = process.cwd()): Promise<ChainboxC
         // If mod is the config object (default export)
         return { ...defaultConfig, ...(mod.default || mod) };
       } catch (error) {
-        console.error(`⚠️  Failed to load ${file}:`, error);
+        console.error(`  Failed to load ${file}:`, error);
         return defaultConfig;
       }
     }

@@ -126,7 +126,7 @@ program
         const entry = JSON.parse(line);
         if (entry.traceId === traceId) {
           found = true;
-          console.log(`\n🔎 Trace Found: ${traceId}\n`);
+          console.log(`\nTrace Found: ${traceId}\n`);
           console.log(`Fon: ${entry.function}`);
           console.log(`Status: ${entry.status}`);
           console.log(`Duration: ${entry.durationMs}ms`);

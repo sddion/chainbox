@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto";
+
 /**
  * Chainbox Telemetry - OpenTelemetry-compatible observability.
  * 
@@ -47,12 +49,7 @@ type SpanRecord = {
  * Generate a random trace/span ID.
  */
 function generateId(length: number = 16): string {
-  const chars = "0123456789abcdef";
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars[Math.floor(Math.random() * 16)];
-  }
-  return result;
+  return randomBytes(length / 2).toString("hex");
 }
 
 /**

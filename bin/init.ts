@@ -6,7 +6,7 @@ export async function Init() {
   const targetPath = path.join(process.cwd(), target);
 
   if (fs.existsSync(targetPath)) {
-    console.log(`⚠️  ${target} already exists.`);
+    console.log(`  ${target} already exists.`);
     return;
   }
 
@@ -34,5 +34,5 @@ export default Config({
 `;
 
   fs.writeFileSync(targetPath, content);
-  console.log(`✅ Created ${target} with default settings.`);
+  console.log(`  Created ${target} with default settings.`);
 }

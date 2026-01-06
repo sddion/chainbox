@@ -37,7 +37,20 @@ export class ChainboxNode {
         this.requestCount++;
         
         let bodyBytes: Buffer[] = [];
-        req.on("data", chunk => bodyBytes.push(chunk));
+        let currentSize = 0;
+        const maxBodySize = parseInt(process.env.CHAINBOX_MAX_BODY_SIZE || "5242880"); // 5MB
+
+        req.on("data", chunk => {
+          currentSize += chunk.length;
+          if (currentSize > maxBodySize) {
+             console.error(`chainbox-node: Payload too large (${currentSize} bytes)`);
+             res.writeHead(413, { "Content-Type": "application/json" });
+             res.end(JSON.stringify({ error: "PAYLOAD_TOO_LARGE", message: "Request body exceeds limit" }));
+             req.destroy();
+             return;
+          }
+          bodyBytes.push(chunk);
+        });
         
         req.on("end", async () => {
           const body = Buffer.concat(bodyBytes).toString();
@@ -146,6 +159,24 @@ export class ChainboxNode {
       console.log(`chainbox-node: Mesh node started on port ${port}`);
       console.log(`chainbox-node: Health check available at http://localhost:${port}/health`);
     });
+
+    // Industry Standard: Graceful Shutdown
+    const shutdown = (signal: string) => {
+      console.log(`chainbox-node: Received ${signal}. Shutting down gracefully...`);
+      server.close(() => {
+        console.log("chainbox-node: Server closed.");
+        process.exit(0);
+      });
+
+      // Force shutdown after 10s
+      setTimeout(() => {
+        console.error("chainbox-node: Could not close connections in time, forceful shutdown.");
+        process.exit(1);
+      }, 10000);
+    };
+
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
 
     return server;
   }

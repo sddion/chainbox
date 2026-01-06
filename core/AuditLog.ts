@@ -66,11 +66,10 @@ export class AuditLog {
     });
     console.log(jsonLog);
 
-    // Persist to local file for CLI inspection (Dev/Test only)
-    if (process.env.NODE_ENV !== "production") {
-      this.ensureLogDir();
-      fs.appendFile(this.logFile, jsonLog + "\n", () => {});
-    }
+    // Persist to local file for CLI inspection
+    this.ensureLogDir();
+    fs.appendFile(this.logFile, jsonLog + "\n", () => {});
+
   }
 
   /**
