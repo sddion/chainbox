@@ -5,8 +5,8 @@
     "private": true,
     "scripts": {
         "build:search": "node scripts/build-search.mjs",
-        "build": "npm run build:search && postcss src/input.css -o dist/output.css",
-        "dev": "postcss src/input.css -o dist/output.css --watch"
+        "build": "npm run build:search && postcss src/input.css -o assets/output.css",
+        "dev": "postcss src/input.css -o assets/output.css --watch"
     },
     "dependencies": {
         "@tailwindcss/cli": "^4.0.0",
