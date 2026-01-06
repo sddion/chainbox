@@ -1,87 +1,135 @@
 @import "tailwindcss";
 
 @theme {
-    --color-bg: #0f1115;
-    --color-bg-alt: #16181d;
+    /* Premium "Nexus" Theme */
+    --color-bg: #050505;
+    --color-bg-card: #0F0F0F;
+    --color-bg-glass: rgba(10, 10, 10, 0.7);
 
-    --color-brand-light: #60a5fa;
-    --color-brand: #3b82f6;
-    --color-brand-dark: #2563eb;
+    /* Vibrant Gradients */
+    --color-brand-start: #7B3FE4; /* Electric Violet */
+    --color-brand-end: #4361EE;   /* Neon Blue */
+    --color-brand: #4361EE;       /* Fallback */
 
-    --font-sans: 'Inter', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    /* Accents */
+    --color-accent: #F72585;      /* Cyber Pink */
+    --color-success: #4CC9F0;     /* Electric Cyan */
 
-    --image-hero-gradient: linear-gradient(135deg, #1e293b 0%, #0f1115 100%);
-    --image-mesh: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+    /* Typography */
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    /* Effects */
+    --shadow-glow: 0 0 20px rgba(67, 97, 238, 0.3);
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    
+    /* Backgrounds */
+    --image-hero-glow: radial-gradient(circle at 50% 0%, rgba(123, 63, 228, 0.15) 0%, transparent 60%);
+    --image-mesh-dark: radial-gradient(at 0% 0%, rgba(67, 97, 238, 0.1) 0px, transparent 50%),
+                       radial-gradient(at 100% 0%, rgba(247, 37, 133, 0.05) 0px, transparent 50%);
 }
 
-/* Global Styles */
 @layer base {
     html {
-        @apply overflow-x-hidden;
+        @apply scroll-smooth;
     }
-
+    
     body {
-        @apply bg-bg text-gray-300 font-sans antialiased overflow-x-hidden;
+        @apply bg-bg text-gray-400 font-sans antialiased selection:bg-brand-start selection:text-white;
+        background-image: var(--image-hero-glow);
+        background-attachment: fixed;
     }
 
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
+    h1, h2, h3, h4 {
         @apply text-white font-bold tracking-tight;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        @apply bg-bg;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
     }
 }
 
-@utility prose {
+@utility glass {
+    @apply backdrop-blur-xl bg-bg-glass border border-white/5;
+}
+
+@utility text-gradient {
+    @apply bg-clip-text text-transparent bg-linear-to-r from-brand-start to-brand-end;
+}
+
+@utility card-hover {
+    @apply transition-all duration-300 hover:border-white/20 hover:shadow-glow hover:-translate-y-0.5;
+}
+
+@utility prose-premium {
     & h1 {
-        @apply text-3xl md:text-4xl mb-6;
+        @apply text-4xl md:text-5xl lg:text-6xl mb-8 font-extrabold text-transparent bg-clip-text bg-linear-to-r from-white via-white to-gray-400;
     }
 
     & h2 {
-        @apply text-xl md:text-2xl mt-12 mb-6 border-b border-white/10 pb-2;
+        @apply text-2xl md:text-3xl mt-16 mb-6 flex items-center gap-3 text-white border-none;
+    }
+
+    & h2::before {
+        content: '';
+        @apply w-1.5 h-1.5 rounded-full bg-brand-end shadow-[0_0_10px_var(--color-brand-end)];
     }
 
     & h3 {
-        @apply text-lg md:text-xl mt-8 mb-4;
+        @apply text-xl md:text-2xl mt-10 mb-4 font-medium text-gray-100;
     }
 
     & p {
-        @apply mb-6 leading-7 text-gray-400;
-    }
-
-    & ul {
-        @apply list-disc list-inside mb-6 text-gray-400 space-y-2;
-    }
-
-    & li {
-        @apply marker:text-brand;
+        @apply mb-6 leading-8 text-lg text-gray-400 font-light;
     }
 
     & strong {
-        @apply text-white font-semibold;
+        @apply text-white font-semibold border-b border-brand-start/30 pb-0.5;
     }
 
-    & code {
-        @apply font-mono text-sm text-brand-light bg-brand/10 px-1.5 py-0.5 rounded break-words whitespace-normal;
+    & ul {
+        @apply space-y-3 mb-8 ml-2;
     }
 
+    & li {
+        @apply flex items-start gap-3 text-gray-300 leading-relaxed;
+    }
+
+    & li::before {
+        content: '→';
+        @apply text-brand-end font-mono;
+    }
+
+    /* Code Blocks */
     & pre {
-        @apply bg-bg-alt border border-white/10 rounded-lg p-4 overflow-x-auto mb-6 max-w-[calc(100vw-3rem)] md:max-w-none;
-    }
-
-    /* Target the wrapper divs directly if they are used */
-    & .bg-bg-alt.border.rounded-lg {
-        @apply max-w-[calc(100vw-3rem)] md:max-w-none overflow-x-auto;
+        @apply bg-[#0A0A0A] border border-white/5 rounded-xl p-0 overflow-hidden mb-8 shadow-2xl;
     }
 
     & pre code {
-        @apply bg-transparent p-0 text-inherit;
+        @apply block p-5 font-mono text-[13px] leading-6 bg-transparent text-gray-300;
     }
 
+    /* Inline Code */
+    & :not(pre) > code {
+        @apply font-mono text-sm text-brand-end bg-brand-end/10 px-1.5 py-0.5 rounded border border-brand-end/10;
+    }
+    
     & a {
-        @apply text-brand hover:text-brand-light underline decoration-brand/30 underline-offset-4 transition-colors;
+        @apply text-brand-end hover:text-brand-start transition-colors font-medium border-b border-brand-end/20 hover:border-brand-start;
+    }
+
+    /* Callouts / Alerts */
+    & blockquote {
+        @apply border-l-2 border-brand-start bg-brand-start/5 pl-6 py-4 rounded-r-lg my-8 italic text-gray-300;
     }
 }

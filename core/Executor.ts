@@ -1,5 +1,6 @@
 import { Registry } from "./Registry";
-import { Context, Ctx, Identity, ExecutionFrame, TraceFrame, ChainboxError, ChainboxErrorType } from "./Context";
+import { Env } from "./Env";
+import { Context, Identity, TraceFrame, ExecutionFrame, ExecutionTarget, Ctx, ChainboxError } from "./Context";
 import { DbAdapter } from "./DbAdapter";
 import { ExecutionPlanner } from "./ExecutionPlanner";
 import { Mesh, MeshPayload, MeshBatchPayload } from "../transport/Mesh";
@@ -7,7 +8,7 @@ import { StorageAdapter, InMemoryStorage } from "./Storage";
 import { WasmRuntime } from "./WasmRuntime";
 import { RateLimiter } from "./RateLimiter";
 import { AuditLog } from "./AuditLog";
-import { Telemetry, SpanContext } from "./Telemetry";
+import { Telemetry } from "./Telemetry";
 import { TenantManager } from "./TenantManager";
 import { Cache } from "./Cache";
 import { Authenticator } from "./Authenticator";
@@ -50,9 +51,12 @@ export class NodeRuntime implements ExecutionRuntime {
  * Executor handles the actual execution of Chainbox functions with safety controls and distribution.
  */
 export class Executor {
+  // Dynamic Env Detection
+  private static sbConfig = Env.DetectSupabaseConfig();
+  
   private static db = new DbAdapter({
-    url: process.env.CHAINBOX_SUPABASE_URL || process.env.NEXT_PUBLIC_CHAINBOX_SUPABASE_URL || process.env.SUPABASE_URL,
-    secretKey: process.env.CHAINBOX_SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+    url: this.sbConfig.url,
+    secretKey: this.sbConfig.key
   });
 
   private static kv: StorageAdapter = new InMemoryStorage();
@@ -60,6 +64,8 @@ export class Executor {
 
   private static runtime: ExecutionRuntime = new NodeRuntime();
   private static wasmRuntime: ExecutionRuntime = new WasmRuntime();
+
+
 
   /**
    * Default execution limits.

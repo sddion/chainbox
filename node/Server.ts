@@ -18,7 +18,7 @@ export class ChainboxNode {
   /**
    * Start the mesh node server.
    */
-  public static Start(port: number = 4000) {
+  public static Start(port: number = 4000, staticDir?: string) {
     const server = http.createServer(async (req, res) => {
       // Health check endpoint
       if (req.method === "GET" && req.url === "/health") {
@@ -94,7 +94,49 @@ export class ChainboxNode {
         return;
       }
 
-      // 404 for unknown routes
+      // 404 / Static File Serving
+      if (staticDir) {
+        const fs = require("fs");
+        const path = require("path");
+        
+        let filePath = path.join(staticDir, req.url === "/" ? "index.html" : req.url || "");
+        
+        // Prevent directory traversal
+        if (!filePath.startsWith(path.resolve(staticDir))) {
+            res.writeHead(403);
+            res.end("Forbidden");
+            return;
+        }
+
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+           const ext = path.extname(filePath).toLowerCase();
+           const mimePromise = import("mime"); // Lazy load specific MIME if needed, simple map for now
+           const map: any = {
+             ".html": "text/html",
+             ".js": "application/javascript",
+             ".css": "text/css",
+             ".json": "application/json",
+             ".png": "image/png",
+             ".jpg": "image/jpeg",
+             ".svg": "image/svg+xml",
+             ".ico": "image/x-icon",
+           };
+           res.writeHead(200, { "Content-Type": map[ext] || "application/octet-stream" });
+           fs.createReadStream(filePath).pipe(res);
+           return;
+        }
+
+        // SPA Fallback for HTML requests
+        if (req.headers.accept?.includes("text/html")) {
+            const index = path.join(staticDir, "index.html");
+            if (fs.existsSync(index)) {
+                res.writeHead(200, { "Content-Type": "text/html" });
+                fs.createReadStream(index).pipe(res);
+                return;
+            }
+        }
+      }
+
       res.writeHead(404, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "NOT_FOUND" }));
     });

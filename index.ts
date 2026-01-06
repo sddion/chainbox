@@ -13,3 +13,10 @@ export * from "./transport/Mesh";
 export * from "./transport/Local";
 export * from "./transport/Http";
 export * from "./core/Authenticator";
+export * from "./core/Authenticator";
+// Integrations are available via specific subpaths:
+// @sddion/chainbox/express
+// @sddion/chainbox/vite
+// @sddion/chainbox/fastify
+// @sddion/chainbox/hono
+// @sddion/chainbox/next

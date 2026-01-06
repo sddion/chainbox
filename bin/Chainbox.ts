@@ -68,12 +68,24 @@ export default async function (ctx: Ctx) {
   });
 
 program
+  .command("list")
+  .description("List all available Chainbox functions")
+  .action(async () => {
+    const { ListFunctions } = await import("./list");
+    await ListFunctions();
+  });
+
+program
   .command("serve")
   .option("-p, --port <number>", "Port to listen on", "4000")
+  .option("-s, --static <dir>", "Directory to serve static files from (e.g., dist)")
   .description("Start a standalone Chainbox mesh node")
   .action((options) => {
     const port = parseInt(options.port);
-    ChainboxNode.Start(port);
+    if (options.static) {
+        console.log(`chainbox: Serving static files from ${options.static}`);
+    }
+    ChainboxNode.Start(port, options.static);
   });
 
 program

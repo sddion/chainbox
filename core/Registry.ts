@@ -14,46 +14,35 @@ export type CodeSource = {
 export class Registry {
   private static functionsDir = path.join(process.cwd(), "src", "app", "_chain");
 
-  // In a real system, this would be backed by a CAS (Content Addressed Storage)
-  private static hashMap: Record<string, string | CodeSource> = {};
-
-  /**
-   * Registers a function hash to a logical path or raw code.
-   */
-  public static RegisterHash(hash: string, target: string | CodeSource) {
-    this.hashMap[hash] = target;
+  public static SetRoot(dir: string) {
+    this.functionsDir = path.resolve(process.cwd(), dir);
   }
 
-  /**
-   * Resolves a logical function name to its handler or source.
-   */
-  public static async Resolve(fnName: string): Promise<CodeSource & { permissions?: { allow: string[] } }> {
-    // If it's a hash, resolve via hashMap
-    if (/^[a-f0-9]{64}$/.test(fnName)) {
-      const target = this.hashMap[fnName];
-      if (!target) throw new Error("HASH NOT RESOLVED");
-      
-      if (typeof target === "string") {
-        return this.Resolve(target);
-      }
-      return { ...target };
-    }
+  // ...
 
+  public static async Resolve(fnName: string): Promise<CodeSource & { permissions?: { allow: string[] } }> {
+    // ...
     const parts = fnName.split(".");
     let targetPath = path.join(this.functionsDir, ...parts);
     
-    // Try resolving as file
-    const tsPath = targetPath + ".ts";
+    // Check various extensions: .ts, .js, .mjs, .cjs
+    const extensions = [".ts", ".js", ".mjs", ".cjs"];
+    let filePath = "";
+    
+    for (const ext of extensions) {
+      if (require('fs').existsSync(targetPath + ext)) {
+        filePath = targetPath + ext;
+        break;
+      }
+    }
+    
     const wasmPath = targetPath + ".wasm";
     
-    // Check for WASM first (prefer implementation if mixed, or strict priority)
-    // Check for WASM first (prefer implementation if mixed, or strict priority)
-
     // 1. Try TS/JS
-    if (require('fs').existsSync(tsPath)) {
+    if (filePath) {
        try {
         const loader = jiti(process.cwd(), { cache: false, interopDefault: true });
-        const module = loader(tsPath);
+        const module = loader(filePath);
         const handler = module.default || module;
         return {
           type: "js",
@@ -62,7 +51,7 @@ export class Registry {
           permissions: module.permissions,
         };
        } catch (error: any) {
-        console.error(`chainbox: Error loading function "${fnName}" at ${tsPath}`, error);
+        console.error(`chainbox: Error loading function "${fnName}" at ${filePath}`, error);
         throw new Error("FUNCTION_LOAD_ERROR");
        }
     }
@@ -88,7 +77,7 @@ export class Registry {
       return this.Resolve(fallbackName);
     }
 
-    console.error(`chainbox: Function not found: ${fnName} (checked ${tsPath}, ${wasmPath})`);
+    console.error(`chainbox: Function not found: ${fnName} (checked ${filePath || targetPath}, ${wasmPath})`);
     throw new Error("FUNCTION_NOT_FOUND");
   }
 }
