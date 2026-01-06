@@ -9,6 +9,12 @@ export interface ChainboxConfig {
    * @default "src/app/_chain"
    */
   functionsDir?: string;
+
+  /**
+   * Database provider.
+   * @default "supabase" (detected if not set)
+   */
+  database?: "supabase" | "firebase";
 }
 
 export const defaultConfig: ChainboxConfig = {

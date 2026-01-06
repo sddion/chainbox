@@ -2,23 +2,29 @@
   {
     "url": "index.html",
     "title": "Chainbox",
-    "content": " Chainbox",
-    "headings": []
+    "content": "Building for 2026 Chainbox",
+    "headings": [
+      "Building for 2026"
+    ]
   },
   {
     "url": "guide/getting-started.html",
     "title": "Getting Started",
-    "content": "Getting Started Installation Quick Start Getting Started",
+    "content": "The Cognitive Bridge Phase 1: Zero Setup Phase 2: Defining Intuition Phase 3: Choose your Database Framework Integrations Production Serving Developer Tools Getting Started",
     "headings": [
-      "Getting Started",
-      "Installation",
-      "Quick Start"
+      "The Cognitive Bridge",
+      "Phase 1: Zero Setup",
+      "Phase 2: Defining Intuition",
+      "Phase 3: Choose your Database",
+      "Framework Integrations",
+      "Production Serving",
+      "Developer Tools"
     ]
   },
   {
     "url": "guide/core-concepts.html",
-    "title": "Core Concepts",
-    "content": "Core Concepts Capabilities No API Layer The Call() Function Core Concepts",
+    "title": "Chainbox Documentation",
+    "content": "Core Concepts Capabilities No API Layer The Call() Function Chainbox Documentation",
     "headings": [
       "Core Concepts",
       "Capabilities",
@@ -28,19 +34,20 @@
   },
   {
     "url": "guide/execution-context.html",
-    "title": "Execution Context",
-    "content": "Execution Context Structure Storage Adapters Usage Execution Context",
+    "title": "Chainbox Documentation",
+    "content": "Execution Context Structure External Adapters (Secure I/O) Storage Adapters Usage Chainbox Documentation",
     "headings": [
       "Execution Context",
       "Structure",
+      "External Adapters (Secure I/O)",
       "Storage Adapters",
       "Usage"
     ]
   },
   {
     "url": "guide/capability-chaining.html",
-    "title": "Capability Chaining",
-    "content": "Server-Side Composition Sequential Composition Parallel Execution Capability Chaining",
+    "title": "Chainbox Documentation",
+    "content": "Server-Side Composition Sequential Composition Parallel Execution Chainbox Documentation",
     "headings": [
       "Server-Side Composition",
       "Sequential Composition",
@@ -49,8 +56,8 @@
   },
   {
     "url": "guide/error-handling.html",
-    "title": "Error Handling",
-    "content": "Error Handling Throwing Errors Client-Side Handling Custom Error Types Error Handling",
+    "title": "Chainbox Documentation",
+    "content": "Error Handling Throwing Errors Client-Side Handling Custom Error Types Chainbox Documentation",
     "headings": [
       "Error Handling",
       "Throwing Errors",
@@ -60,29 +67,19 @@
   },
   {
     "url": "guide/security.html",
-    "title": "Security",
-    "content": "Security Model Authorization Error Handling Security",
+    "title": "Chainbox Documentation",
+    "content": "Security Model Authorization Policy Engine (RBAC) Error Handling Chainbox Documentation",
     "headings": [
       "Security Model",
       "Authorization",
+      "Policy Engine (RBAC)",
       "Error Handling"
     ]
   },
   {
-    "url": "guide/supabase-adapter.html",
-    "title": "Supabase Adapter",
-    "content": "Supabase Adapter Setup Usage in Capabilities Row Level Security (RLS) Supabase Adapter",
-    "headings": [
-      "Supabase Adapter",
-      "Setup",
-      "Usage in Capabilities",
-      "Row Level Security (RLS)"
-    ]
-  },
-  {
     "url": "guide/faq.html",
-    "title": "FAQ",
-    "content": "FAQ Is this a replacement for REST? How does it handle file uploads? Can I use it with React/Vue/Svelte? FAQ",
+    "title": "Chainbox Documentation",
+    "content": "FAQ Is this a replacement for REST? How does it handle file uploads? Can I use it with React/Vue/Svelte? Chainbox Documentation",
     "headings": [
       "FAQ",
       "Is this a replacement for REST?",
@@ -92,8 +89,8 @@
   },
   {
     "url": "reference/capabilities.html",
-    "title": "Capability Reference",
-    "content": "Capability Reference Client Server Capability Reference",
+    "title": "Chainbox Documentation",
+    "content": "Capability Reference Client Server Chainbox Documentation",
     "headings": [
       "Capability Reference",
       "Client",

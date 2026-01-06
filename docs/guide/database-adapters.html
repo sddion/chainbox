@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chainbox Documentation</title>
+    <title>Database Adapters - Chainbox</title>
     <meta name="description" content="Chainbox Documentation">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,20 +70,20 @@
                     <h5 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 pl-3">Guide</h5>
                     <ul class="space-y-1">
                         <li><a href="getting-started.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Getting Started</a></li>
-                        <li><a href="core-concepts.html"
-                                class="flex items-center gap-2 px-3 py-2 text-white bg-white/5 border border-brand-start/20 rounded-lg shadow-glow-sm transition-all relative overflow-hidden group">
-                                <span class="relative z-10 text-sm font-medium">Core Concepts</span>
-                                <div
-                                    class="absolute inset-0 bg-linear-to-r from-brand-start/10 to-transparent opacity-50">
-                                </div>
-                            </a></li>
+                        <li><a href="core-concepts.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Core Concepts</a></li>
                         <li><a href="architecture.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Architecture</a></li>
                         <li><a href="client-sdk.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Client SDK</a></li>
                         <li><a href="execution-context.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Execution Context</a></li>
                         <li><a href="capability-chaining.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Chaining</a></li>
                         <li><a href="error-handling.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Error Handling</a></li>
                         <li><a href="security.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Security</a></li>
-                        <li><a href="database-adapters.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Database Adapters</a></li>
+                        <li><a href="database-adapters.html"
+                                class="flex items-center gap-2 px-3 py-2 text-white bg-white/5 border border-brand-start/20 rounded-lg shadow-glow-sm transition-all relative overflow-hidden group">
+                                <span class="relative z-10 text-sm font-medium">Database Adapters</span>
+                                <div
+                                    class="absolute inset-0 bg-linear-to-r from-brand-start/10 to-transparent opacity-50">
+                                </div>
+                            </a></li>
                         <li><a href="faq.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">FAQ</a></li>
                     </ul>
                 </div>
@@ -102,44 +102,93 @@
         <main class="flex-1 lg:ml-12 pr-6 xl:pr-12 pb-24 relative z-10">
             <article class="prose-premium max-w-4xl">
 
-                <h1>Core Concepts</h1>
-                <p>Chainbox flips the traditional API model on its head. Instead of defining endpoints, you define
-                    <strong>Capabilities</strong>.
-                </p>
+                <h1>Database Adapters</h1>
+                <p class="lead">Chainbox is built to be database-agnostic. It provides high-level adapters that inject a
+                    scoped database client directly into your execution context.</p>
 
-                <h2>Capabilities</h2>
-                <p>Capabilities are pure functions that take an input and an execution context.</p>
+                <p>By using <code>ctx.db</code>, you don't have to worry about connection strings, environment variable
+                    management, or client initialization in your logic. Chainbox handles it all for you.</p>
 
-                <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
-                    <pre><code><span class="text-purple-400">type</span> <span class="text-yellow-400">Capability</span> = (input: <span class="text-yellow-400">any</span>, ctx: <span class="text-yellow-400">Context</span>) => <span class="text-yellow-400">Promise</span><<span class="text-yellow-400">any</span>>;</code></pre>
+                <div class="grid md:grid-cols-2 gap-6 my-12">
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-start/30 transition-all group">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-brand-start/10 flex items-center justify-center text-brand-start mb-4 group-hover:scale-110 transition-transform">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M21 7.25c0-.414-.336-.75-.75-.75H3.75c-.414 0-.75.336-.75.75v1.5c0 .414.336.75.75.75h16.5c.414 0 .75-.336.75-.75v-1.5zM21 12.25c0-.414-.336-.75-.75-.75H3.75c-.414 0-.75.336-.75.75v1.5c0 .414.336.75.75.75h16.5c.414 0 .75-.336.75-.75v-1.5zM21 17.25c0-.414-.336-.75-.75-.75H3.75c-.414 0-.75.336-.75.75v1.5c0 .414.336.75.75.75h16.5c.414 0 .75-.336.75-.75v-1.5z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Supabase</h3>
+                        <p class="text-sm text-gray-400">PostgreSQL with Row Level Security (RLS) support. Best for
+                            SQL-heavy applications.</p>
+                    </div>
+                    <div
+                        class="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-brand-end/30 transition-all group">
+                        <div
+                            class="w-12 h-12 rounded-xl bg-brand-end/10 flex items-center justify-center text-brand-end mb-4 group-hover:scale-110 transition-transform">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm0 2.18L18 6.4v4.69c0 4.08-2.56 7.88-6 8.92-3.44-1.04-6-4.84-6-8.92V6.4l6-2.22z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Firebase</h3>
+                        <p class="text-sm text-gray-400">Google Cloud Firestore support. Best for real-time, NoSQL
+                            document storage.</p>
+                    </div>
                 </div>
 
-                <h2>No API Layer</h2>
-                <p>Chainbox uses <strong>File-System Routing</strong> to map capabilities to functions. A file at
-                    <code>src/app/_chain/user/create.ts</code> becomes the <code>user.create</code> capability.
-                </p>
-
-                <h2>The <code>Call()</code> Function</h2>
-                <p>The primary way to interact with Chainbox is via the <code>Call</code> function.</p>
+                <h2 id="configuration">Configuration</h2>
+                <p>You can choose your provider in <code>chainbox.config.ts</code>:</p>
 
                 <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
-                    <pre><code><span class="text-purple-400">import</span> { Call } <span class="text-purple-400">from</span> <span class="text-green-400">"@sddion/chainbox/client"</span>;
-
-<span class="text-gray-500">// Simple call</span>
-<span class="text-purple-400">await</span> <span class="text-blue-400">Call</span>(<span class="text-green-400">"user.create"</span>, { name: <span class="text-green-400">"Alice"</span> });
-
-<span class="text-gray-500">// Call with options (e.g., custom headers)</span>
-<span class="text-purple-400">await</span> <span class="text-blue-400">Call</span>(<span class="text-green-400">"payment.process"</span>, { amount: <span class="text-orange-400">100</span> }, {
-    headers: { <span class="text-green-400">"Idempotency-Key"</span>: <span class="text-green-400">"123"</span> },
+                    <pre><code><span class="text-purple-400">export default</span> <span class="text-blue-400">Config</span>({
+  database: <span class="text-green-400">"firebase"</span> <span class="text-gray-500">// or "supabase" (default)</span>
 });</code></pre>
                 </div>
 
-                <p>It handles:</p>
+                <h2 id="supabase">Database Adapters</h2>
+                <p>When using Supabase, Chainbox forwards the user's JWT to enforce **Row Level Security** at the
+                    database level.</p>
+
+                <h3>Requirements</h3>
                 <ul>
-                    <li>Variable serialisation</li>
-                    <li>Type inference (with TypeScript)</li>
-                    <li>Error propagation</li>
+                    <li><code>CHAINBOX_SUPABASE_URL</code></li>
+                    <li><code>CHAINBOX_SUPABASE_SECRET_KEY</code></li>
                 </ul>
+
+                <h3>Example Usage</h3>
+                <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
+                    <pre><code><span class="text-purple-400">export default async function</span> <span class="text-blue-400">getTodos</span>(input, ctx) {
+  <span class="text-purple-400">const</span> { data } <span class="text-purple-400">=</span> <span class="text-purple-400">await</span> ctx.db.<span class="text-blue-400">from</span>(<span class="text-green-400">"todos"</span>).<span class="text-blue-400">select</span>(<span class="text-green-400">"*"</span>);
+  <span class="text-purple-400">return</span> data;
+}</code></pre>
+                </div>
+
+                <h2 id="firebase">Firebase Adapter (Firestore)</h2>
+                <p>Firebase support uses <code>firebase-admin</code> under the hood to provide secure, administrative
+                    access to your Firestore collections.</p>
+
+                <h3>Requirements</h3>
+                <ul>
+                    <li><code>FIREBASE_PROJECT_ID</code></li>
+                    <li><code>FIREBASE_CLIENT_EMAIL</code></li>
+                    <li><code>FIREBASE_PRIVATE_KEY</code></li>
+                </ul>
+
+                <h3>Example Usage</h3>
+                <div class="bg-bg-alt rounded-lg border border-white/10 p-4 font-mono text-sm overflow-x-auto mb-6">
+                    <pre><code><span class="text-purple-400">export default async function</span> <span class="text-blue-400">getDocs</span>(input, ctx) {
+  <span class="text-purple-400">const</span> snapshot <span class="text-purple-400">=</span> <span class="text-purple-400">await</span> ctx.db.<span class="text-blue-400">from</span>(<span class="text-green-400">"my-collection"</span>).<span class="text-blue-400">get</span>();
+  <span class="text-purple-400">return</span> snapshot.docs.<span class="text-blue-400">map</span>(doc <span class="text-purple-400">=></span> doc.<span class="text-blue-400">data</span>());
+}</code></pre>
+                </div>
+
+                <blockquote>
+                    <p><strong>Note:</strong> While Supabase uses RLS, Firebase in Chainbox currently provides
+                        administrative access. You should implement your own identity-based filtering using
+                        <code>ctx.identity</code> when needed.</p>
+                </blockquote>
 
             </article>
         </main>

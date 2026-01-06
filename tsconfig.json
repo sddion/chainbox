@@ -12,6 +12,6 @@
     "moduleResolution": "node",
     "resolveJsonModule": true
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "chainbox.config.example.ts"],
   "exclude": ["node_modules", "dist", "mesh-node", "demo-app"]
 }

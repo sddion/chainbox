@@ -1,7 +1,7 @@
 import { Registry } from "./Registry";
 import { Env } from "./Env";
-import { Context, Identity, TraceFrame, ExecutionFrame, ExecutionTarget, Ctx, ChainboxError } from "./Context";
-import { DbAdapter } from "./DbAdapter";
+import { Context, Identity, TraceFrame, ExecutionFrame, ExecutionTarget, ExecutionPlan, Ctx, ChainboxError } from "./Context";
+import { IDbAdapter, DbAdapterFactory } from "./DbAdapter";
 import { ExecutionPlanner } from "./ExecutionPlanner";
 import { Mesh, MeshPayload, MeshBatchPayload } from "../transport/Mesh";
 import { StorageAdapter, FileSystemStorage } from "./Storage";
@@ -10,10 +10,11 @@ import { RateLimiter } from "./RateLimiter";
 import { AuditLog } from "./AuditLog";
 import { Telemetry } from "./Telemetry";
 import { TenantManager } from "./TenantManager";
-import { Cache } from "./Cache";
+import { Cache as ChainboxCache } from "./Cache";
 import { Authenticator } from "./Authenticator";
 import { PolicyEngine } from "./Policy";
 import { AdapterRegistry } from "./Adapter";
+import { loadConfig } from "../tools/Config";
 import { randomUUID } from "crypto";
 
 /**
@@ -51,19 +52,29 @@ export class NodeRuntime implements ExecutionRuntime {
  * Executor handles the actual execution of Chainbox functions with safety controls and distribution.
  */
 export class Executor {
-  // Dynamic Env Detection
-  private static sbConfig = Env.DetectSupabaseConfig();
-  
-  private static db = new DbAdapter({
-    url: this.sbConfig.url,
-    secretKey: this.sbConfig.key
-  });
-
+  private static provider: "supabase" | "firebase" | undefined;
+  private static db: IDbAdapter | undefined;
   private static kv: StorageAdapter = new FileSystemStorage("kv");
   private static blob: StorageAdapter = new FileSystemStorage("blob");
 
   private static runtime: ExecutionRuntime = new NodeRuntime();
   private static wasmRuntime: ExecutionRuntime = new WasmRuntime();
+
+  private static async ensureInitialized() {
+    if (this.db) return;
+    
+    const config = await loadConfig();
+    this.provider = config.database || "supabase";
+    
+    this.db = DbAdapterFactory.Create(this.provider, 
+      this.provider === "firebase" ? Env.DetectFirebaseConfig() : Env.DetectSupabaseConfig()
+    );
+
+    // Sync functionsDir to Registry if it changed
+    if (config.functionsDir) {
+      Registry.SetRoot(config.functionsDir);
+    }
+  }
 
 
 
@@ -95,6 +106,9 @@ export class Executor {
     
     // 0.1 TraceId Generation
     const traceId = (options as any).traceId || randomUUID();
+    
+    // 0. Ensure initialization (lazy config load)
+    await this.ensureInitialized();
 
     while (attempts < maxAttempts) {
       attempts++;
@@ -284,7 +298,7 @@ export class Executor {
       }
 
       // 1.6 Cache Check (before execution)
-      const cachedResult = Cache.Get(fnName, input);
+      const cachedResult = ChainboxCache.Get(fnName, input);
       if (cachedResult !== undefined) {
         currentTrace.status = "success";
         currentTrace.outcome = "SUCCESS";
@@ -307,7 +321,7 @@ export class Executor {
       }
 
       // 3. Execution Planning (MESH)
-      const plan = (forceLocal || isRemoteNode) ? { target: "local" as const } : ExecutionPlanner.Plan(fnName, { 
+      const plan: ExecutionPlan = (forceLocal || isRemoteNode) ? { target: "local" } : ExecutionPlanner.Plan(fnName, { 
         identity,
         _internal: { trace: traceArray, frame } 
       } as any);
@@ -380,7 +394,7 @@ export class Executor {
       
       // Inject DB with identity for RLS
       ctx.db = {
-        from: (table: string) => this.db.from(table, identity)
+        from: (table: string) => this.db!.from(table, identity)
       };
 
       // 5. Execution Boundary (Runtime abstraction) with actual timeout enforcement
@@ -402,7 +416,7 @@ export class Executor {
       if (timer) clearTimeout(timer);
       
       // Cache: Store result for cacheable functions
-      Cache.Set(fnName, input, result);
+      ChainboxCache.Set(fnName, input, result);
 
       // --- LIFECYCLE: END (Local) ---
       await this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);

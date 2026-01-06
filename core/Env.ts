@@ -61,4 +61,13 @@ export class Env {
 
     return { url, key };
   }
+
+  public static DetectFirebaseConfig(): { projectId: string; clientEmail: string; privateKey: string } {
+    const env = process.env;
+    let projectId = env.FIREBASE_PROJECT_ID || env.GOOGLE_CLOUD_PROJECT || "";
+    let clientEmail = env.FIREBASE_CLIENT_EMAIL || "";
+    let privateKey = env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || "";
+
+    return { projectId, clientEmail, privateKey };
+  }
 }

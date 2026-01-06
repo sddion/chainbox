@@ -18,7 +18,13 @@ export async function Doctor() {
   }
 
   // 2. Check Environment Variables
-  const requiredEnv = ["CHAINBOX_SUPABASE_URL", "CHAINBOX_SUPABASE_SECRET_KEY"];
+  const provider = process.env.CHAINBOX_DATABASE || (process.env.FIREBASE_PROJECT_ID ? "firebase" : "supabase");
+  console.log(`Database Provider: ${provider}`);
+
+  const requiredEnv = provider === "firebase" 
+    ? ["FIREBASE_PROJECT_ID", "FIREBASE_CLIENT_EMAIL", "FIREBASE_PRIVATE_KEY"]
+    : ["CHAINBOX_SUPABASE_URL", "CHAINBOX_SUPABASE_SECRET_KEY"];
+
   const optionalEnv = ["CHAINBOX_MESH_SECRET", "CHAINBOX_MESH_NODES"];
   
   // Try to load .env if not loaded (simple check)
@@ -30,7 +36,7 @@ export async function Doctor() {
 
   requiredEnv.forEach(key => {
     if (!process.env[key]) {
-      console.warn(`Missing Env: ${key} (Required for DB access)`);
+      console.warn(`Missing Env: ${key} (Required for ${provider} DB access)`);
     } else {
       console.log(`Env: ${key} is set`);
     }

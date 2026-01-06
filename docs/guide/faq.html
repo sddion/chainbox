@@ -50,20 +50,43 @@
 
     <div class="pt-24 max-w-[1600px] mx-auto flex min-h-screen">
         
-        <!-- Sidebar -->
-        <aside class="hidden lg:block w-72 fixed h-[calc(100vh-8rem)] overflow-y-auto pr-6">
+                <!-- Sidebar -->
+        <aside class="hidden lg:block w-72 h-[calc(100vh-8rem)] sticky top-24 overflow-y-auto pr-6">
             <div class="space-y-10">
-                <div><h5 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 pl-3">Guide</h5><ul class="space-y-1"><li><a href="getting-started.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Getting Started</a></li><li><a href="core-concepts.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Core Concepts</a></li><li><a href="architecture.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Architecture</a></li><li><a href="client-sdk.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Client SDK</a></li><li><a href="execution-context.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Execution Context</a></li><li><a href="capability-chaining.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Chaining</a></li><li><a href="error-handling.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Error Handling</a></li><li><a href="security.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Security</a></li><li><a href="supabase-adapter.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Supabase Adapter</a></li><li>
-                            <a href="faq.html" class="flex items-center gap-2 px-3 py-2 text-white bg-white/5 border border-brand-start/20 rounded-lg shadow-glow-sm transition-all relative overflow-hidden group">
+                <div>
+                    <h5 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 pl-3">Guide</h5>
+                    <ul class="space-y-1">
+                        <li><a href="getting-started.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Getting Started</a></li>
+                        <li><a href="core-concepts.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Core Concepts</a></li>
+                        <li><a href="architecture.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Architecture</a></li>
+                        <li><a href="client-sdk.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Client SDK</a></li>
+                        <li><a href="execution-context.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Execution Context</a></li>
+                        <li><a href="capability-chaining.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Chaining</a></li>
+                        <li><a href="error-handling.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Error Handling</a></li>
+                        <li><a href="security.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Security</a></li>
+                        <li><a href="database-adapters.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Database Adapters</a></li>
+                        <li><a href="faq.html"
+                                class="flex items-center gap-2 px-3 py-2 text-white bg-white/5 border border-brand-start/20 rounded-lg shadow-glow-sm transition-all relative overflow-hidden group">
                                 <span class="relative z-10 text-sm font-medium">FAQ</span>
-                                <div class="absolute inset-0 bg-linear-to-r from-brand-start/10 to-transparent opacity-50"></div>
-                            </a>
-                        </li></ul></div><div class="mt-8"><h5 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 pl-3">Reference</h5><ul class="space-y-1"><li><a href="../reference/capabilities.html" class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Capabilities</a></li></ul></div>
+                                <div
+                                    class="absolute inset-0 bg-linear-to-r from-brand-start/10 to-transparent opacity-50">
+                                </div>
+                            </a></li>
+                    </ul>
+                </div>
+                <div class="mt-8">
+                    <h5 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 pl-3">Reference</h5>
+                    <ul class="space-y-1">
+                        <li><a href="../reference/capabilities.html"
+                                class="flex items-center gap-2 px-3 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all text-sm">Capabilities</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 lg:pl-80 pr-6 xl:pr-12 pb-24">
+        <main class="flex-1 lg:ml-12 pr-6 xl:pr-12 pb-24 relative z-10">
             <article class="prose-premium max-w-4xl">
                 
                     <h1>FAQ</h1>
