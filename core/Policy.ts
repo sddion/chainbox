@@ -47,9 +47,9 @@ export class PolicyEngine {
           `Role '${identity.role}' is not allowed`,
           fnName,
           traceId,
-          { 
+          {
             required: source.permissions.allow,
-            actual: identity.role 
+            actual: identity.role
           }
         );
       }

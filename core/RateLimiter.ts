@@ -1,4 +1,5 @@
-import { FileSystemStorage } from "./Storage";
+import { FileSystemStorage, MemoryStorage, StorageAdapter } from "./Storage";
+import { Env } from "./Env";
 
 /**
  * RateLimitConfig defines limits for a specific key (identity, function, tenant).
@@ -21,7 +22,7 @@ type RateLimitBucket = {
  */
 const DEFAULT_LIMITS = {
   // Format: "100/minute" or "1000/hour"
-  default: parseRateLimit(process.env.CHAINBOX_RATE_LIMIT_DEFAULT || "100/minute"),
+  default: parseRateLimit(Env.get("CHAINBOX_RATE_LIMIT_DEFAULT", "100/minute")),
 };
 
 /**
@@ -53,7 +54,7 @@ function parseRateLimit(limit: string): RateLimitConfig {
  * - CHAINBOX_RATE_LIMIT_<FUNCTION>: Function-specific limits (e.g., "User.Create" -> "10/minute")
  */
 export class RateLimiter {
-  private static buckets = new FileSystemStorage("ratelimit");
+  private static buckets: StorageAdapter = (typeof process !== 'undefined' && process.versions && process.versions.node) ? new FileSystemStorage("ratelimit") : new MemoryStorage("ratelimit");
   private static functionLimits: Map<string, RateLimitConfig> = new Map();
 
   /**
@@ -66,10 +67,15 @@ export class RateLimiter {
     this.initialized = true;
 
     // Parse CHAINBOX_RATE_LIMIT_* environment variables
-    for (const [key, value] of Object.entries(process.env)) {
-      if (key.startsWith("CHAINBOX_RATE_LIMIT_") && key !== "CHAINBOX_RATE_LIMIT_DEFAULT") {
-        const fnName = key.replace("CHAINBOX_RATE_LIMIT_", "").replace(/_/g, ".");
-        this.functionLimits.set(fnName, parseRateLimit(value || ""));
+    // Iterate over process.env if available, otherwise just use defaults or specific checks?
+    // In RN, we can't iterate all env vars easily nicely. We might need a predefined list or just rely on defaults.
+    // However, if we are in Node, process.env is fine.
+    if (typeof process !== 'undefined' && process.env) {
+      for (const [key, value] of Object.entries(process.env)) {
+        if (key.startsWith("CHAINBOX_RATE_LIMIT_") && key !== "CHAINBOX_RATE_LIMIT_DEFAULT") {
+          const fnName = key.replace("CHAINBOX_RATE_LIMIT_", "").replace(/_/g, ".");
+          this.functionLimits.set(fnName, parseRateLimit(value || ""));
+        }
       }
     }
   }

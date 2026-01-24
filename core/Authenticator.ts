@@ -1,12 +1,13 @@
 import * as jose from "jose";
 import { Identity } from "./Context";
+import { Env } from "./Env";
 
 /**
  * Authenticator handles JWT verification and identity extraction.
  */
 export class Authenticator {
   private static secret = new TextEncoder().encode(
-    process.env.CHAINBOX_AUTH_SECRET || "default-secret-change-me"
+    Env.get("CHAINBOX_AUTH_SECRET", "default-secret-change-me")
   );
 
   /**

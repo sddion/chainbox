@@ -4,7 +4,7 @@ import { Context, Identity, TraceFrame, ExecutionFrame, ExecutionTarget, Executi
 import { IDbAdapter, DbAdapterFactory } from "./DbAdapter";
 import { ExecutionPlanner } from "./ExecutionPlanner";
 import { Mesh, MeshPayload, MeshBatchPayload } from "../transport/Mesh";
-import { StorageAdapter, FileSystemStorage } from "./Storage";
+import { MemoryStorage, FileSystemStorage, StorageAdapter } from "./Storage";
 import { WasmRuntime } from "./WasmRuntime";
 import { RateLimiter } from "./RateLimiter";
 import { AuditLog } from "./AuditLog";
@@ -14,8 +14,29 @@ import { Cache as ChainboxCache } from "./Cache";
 import { Authenticator } from "./Authenticator";
 import { PolicyEngine } from "./Policy";
 import { AdapterRegistry } from "./Adapter";
-import { loadConfig } from "../tools/Config";
-import { randomUUID } from "crypto";
+import { loadConfig, ChainboxConfig } from "../tools/Config";
+
+// Isomorphic randomUUID since 'crypto' is Node only
+const uuid = () => {
+  // 1. Native randomUUID (Node.js 15+, Modern Browsers, RN with polyfill)
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  // 2. Crypto.getRandomValues (Standard Web Crypto)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    // ID generation using CSPRNG
+    return ((1e7 as any).toString() + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c: any) =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+  }
+
+  // 3. Fallback (Math.random) - Insecure but functional for dev/test
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
 
 /**
  * ExecutionRuntime interface for future-proofing (WASM prep).
@@ -32,7 +53,7 @@ export class NodeRuntime implements ExecutionRuntime {
     // Zero-Surface Security: Default-Deny Network
     // We strictly limit egress to enforce "Library-First" architecture.
     const originalFetch = global.fetch;
-    
+
     try {
       // @ts-ignore
       global.fetch = async (url: string, init?: any) => {
@@ -49,29 +70,61 @@ export class NodeRuntime implements ExecutionRuntime {
 }
 
 /**
+ * Direct Runtime for environments where we trust the execution (e.g. React Native, or when isolation is managed elsewhere).
+ */
+export class DirectRuntime implements ExecutionRuntime {
+  public async run(handler: any, ctx: Ctx): Promise<any> {
+    return await handler(ctx);
+  }
+}
+
+/**
  * Executor handles the actual execution of Chainbox functions with safety controls and distribution.
  */
 export class Executor {
   private static provider: "supabase" | "firebase" | undefined;
   private static db: IDbAdapter | undefined;
-  private static kv: StorageAdapter = new FileSystemStorage("kv");
-  private static blob: StorageAdapter = new FileSystemStorage("blob");
+  // Initialize based on environment (Node gets FS, others get Memory)
+  private static kv: StorageAdapter = (typeof process !== 'undefined' && process.versions && process.versions.node) ? new FileSystemStorage("kv") : new MemoryStorage("kv");
+  private static blob: StorageAdapter = (typeof process !== 'undefined' && process.versions && process.versions.node) ? new FileSystemStorage("blob") : new MemoryStorage("blob");
 
-  private static runtime: ExecutionRuntime = new NodeRuntime();
+  private static runtime: ExecutionRuntime; // Initialize lazily
   private static wasmRuntime: ExecutionRuntime = new WasmRuntime();
 
-  private static async ensureInitialized() {
+  /**
+   * Initialize the Executor.
+   * In non-Node environments, explicit config injection is preferred.
+   */
+  public static async ensureInitialized(injectedConfig?: ChainboxConfig) {
     if (this.db) return;
-    
-    const config = await loadConfig();
+
+    const isNode = typeof process !== "undefined" && process.versions && process.versions.node;
+
+    // Choose Runtime
+    if (isNode) {
+      this.runtime = new NodeRuntime();
+    } else {
+      this.runtime = new DirectRuntime();
+    }
+
+    // Config Loading
+    let config = injectedConfig;
+
+    if (!config && isNode) {
+      // Only attempt FS load if in Node
+      config = await loadConfig();
+    }
+
+    if (!config) config = {}; // Defaults
+
     this.provider = config.database || "supabase";
-    
-    this.db = DbAdapterFactory.Create(this.provider, 
+
+    this.db = DbAdapterFactory.Create(this.provider,
       this.provider === "firebase" ? Env.DetectFirebaseConfig() : Env.DetectSupabaseConfig()
     );
 
     // Sync functionsDir to Registry if it changed
-    if (config.functionsDir) {
+    if (config.functionsDir && isNode) {
       Registry.SetRoot(config.functionsDir);
     }
   }
@@ -90,12 +143,12 @@ export class Executor {
    * Executes a Chainbox function with isolation, safety, and mesh support.
    */
   public static async Execute(
-    fnName: string, 
-    input: any, 
+    fnName: string,
+    input: any,
     parentTrace: TraceFrame[] = [],
     identity?: Identity,
     parentFrame?: ExecutionFrame,
-    forceLocal: boolean = false,
+    target: ExecutionTarget | boolean = false,
     options: { retries?: number; traceId?: string } = {}
   ): Promise<any> {
     let attempts = 0;
@@ -103,17 +156,18 @@ export class Executor {
 
     // 0. Resolve Identity if not provided (e.g., from a token in options)
     const resolvedIdentity = identity || ((options as any).token ? await Authenticator.Authenticate((options as any).token) : undefined);
-    
+
     // 0.1 TraceId Generation
-    const traceId = (options as any).traceId || randomUUID();
-    
+    // 0.1 TraceId Generation
+    const traceId = (options as any).traceId || uuid();
+
     // 0. Ensure initialization (lazy config load)
     await this.ensureInitialized();
 
     while (attempts < maxAttempts) {
       attempts++;
       try {
-        return await this._InternalExecute(fnName, input, parentTrace, resolvedIdentity, parentFrame, forceLocal, traceId);
+        return await this._InternalExecute(fnName, input, parentTrace, resolvedIdentity, parentFrame, target, traceId);
       } catch (error: any) {
         const cbError = error instanceof ChainboxError ? error : new ChainboxError("EXECUTION_ERROR", error.message || "Unknown error", fnName, traceId, { original: error });
 
@@ -168,14 +222,14 @@ export class Executor {
     const duration = Date.now() - startTime;
     currentTrace.durationMs = duration;
     currentTrace.status = "success";
-    
+
     // Outcome Integrity: Fail responsibly if outcome is missing (Never infer)
     if (!currentTrace.outcome) {
-       console.error(`chainbox: INVARIANT VIOLATION - Function ${fnName} completed without an outcome tag.`);
-       // In production, we might want to be safer, but for v1 strictness, we count this as a system failure.
-       // However, to avoid crashing the request flow for metering, we set it to FAILURE but log heavily.
-       currentTrace.outcome = "FAILURE"; 
-       Telemetry.IncrementCounter("chainbox_invariant_violation", { Type: "MissingOutcome", Function: fnName });
+      console.error(`chainbox: INVARIANT VIOLATION - Function ${fnName} completed without an outcome tag.`);
+      // In production, we might want to be safer, but for v1 strictness, we count this as a system failure.
+      // However, to avoid crashing the request flow for metering, we set it to FAILURE but log heavily.
+      currentTrace.outcome = "FAILURE";
+      Telemetry.IncrementCounter("chainbox_invariant_violation", { Type: "MissingOutcome", Function: fnName });
     }
 
     // 1. Telemetry End
@@ -206,7 +260,7 @@ export class Executor {
     effectiveTraceId: string
   ): Promise<ChainboxError> {
     const duration = Date.now() - startTime;
-    
+
     // 1. Error Normalization
     const normalizedError = error instanceof ChainboxError ? error : new ChainboxError(
       error.code || error.error || "EXECUTION_ERROR",
@@ -241,23 +295,23 @@ export class Executor {
     if (!parentFrame) {
       AuditLog.LogError(fnName, normalizedError.code, identity, duration, undefined, effectiveTraceId, currentTrace);
     }
-    
+
     return normalizedError;
   }
 
   private static async _InternalExecute(
-    fnName: string, 
-    input: any, 
+    fnName: string,
+    input: any,
     parentTrace: TraceFrame[] = [],
     identity?: Identity,
     parentFrame?: ExecutionFrame,
-    forceLocal: boolean = false,
+    target: ExecutionTarget | boolean = false,
     traceId?: string
   ): Promise<any> {
     const startTime = Date.now();
-    const effectiveTraceId = traceId || randomUUID();
+    const effectiveTraceId = traceId || uuid();
 
-    
+
     // 0. Initialize or update execution frame
     // If this is a mesh node, reset startTime to avoid stale timestamps from remote calls
     const isRemoteNode = process.env.CHAINBOX_IS_NODE === "true";
@@ -274,12 +328,12 @@ export class Executor {
     };
 
     // Create current trace frame (the node in the execution tree)
-    const currentTrace: TraceFrame = { 
-      fn: fnName, 
+    const currentTrace: TraceFrame = {
+      fn: fnName,
       identity: identity?.id,
-      children: [] 
+      children: []
     };
-    
+
     // Keep parentTrace as a flat array of current-sibling-level frames for compatibility if needed,
     // but the real data is in the tree.
     const traceArray: TraceFrame[] = [...parentTrace, currentTrace];
@@ -288,7 +342,7 @@ export class Executor {
     // Note: We create context *before* checking cache to ensure consistent telemetry even for cache hits (optional choice, but cleaner)
     // However, rate limits should probably strictly apply.
     const { spanContext } = await this.onStart(fnName, identity, frame, parentFrame);
-    
+
     try {
       // 1. Safety Checks: Recursion Depth
       if (frame.depth > frame.maxDepth) {
@@ -304,11 +358,11 @@ export class Executor {
         currentTrace.outcome = "SUCCESS";
         currentTrace.cached = true;
         Telemetry.IncrementCounter("chainbox_cache_hits", { function: fnName });
-        
+
         // --- LIFECYCLE: END (Cache Hit) ---
         // We artificially call onEnd to record the 'success' of a cache hit, though duration is negligible
         await this.onEnd(fnName, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
-        
+
         return { ...cachedResult, trace: [currentTrace] };
       }
 
@@ -321,17 +375,18 @@ export class Executor {
       }
 
       // 3. Execution Planning (MESH)
-      const plan: ExecutionPlan = (forceLocal || isRemoteNode) ? { target: "local" } : ExecutionPlanner.Plan(fnName, { 
+      const forceLocal = target === true || target === "local";
+      const plan: ExecutionPlan = (forceLocal || isRemoteNode) ? { target: "local" } : ExecutionPlanner.Plan(fnName, {
         identity,
-        _internal: { trace: traceArray, frame } 
+        _internal: { trace: traceArray, frame }
       } as any);
-      
+
       currentTrace.target = plan.target;
       currentTrace.nodeId = plan.nodeId || (isRemoteNode ? "remote-node" : "local-host");
 
       if (plan.target === "remote" && !forceLocal && !isRemoteNode) {
         if (!plan.nodeId) throw new Error("REMOTE_NODE_NOT_SPECIFIED");
-        
+
         const payload: MeshPayload = {
           fn: fnName,
           input,
@@ -342,7 +397,7 @@ export class Executor {
         };
 
         const result = await Mesh.Call(plan.nodeId, payload);
-        
+
         // Merge remote trace into local tree if available
         if (result.trace && result.trace.length > 0) {
           const remoteRoot = result.trace[result.trace.length - 1];
@@ -365,19 +420,19 @@ export class Executor {
 
       const handler = source.handler;
       if (!handler && source.type !== "wasm") {
-          throw new ChainboxError("INTERNAL_ERROR", "Dynamic execution from strings is not supported", fnName, effectiveTraceId);
+        throw new ChainboxError("INTERNAL_ERROR", "Dynamic execution from strings is not supported", fnName, effectiveTraceId);
       }
-      
+
       const ctx: Ctx = Context.Build(
         input,
         async (nextFn, nextInput, opt) => {
-            const res = await this._InternalExecute(nextFn, nextInput, [currentTrace], identity, frame, forceLocal, effectiveTraceId);
-            // After sub-call, we can extract the trace from the result if we want to build the tree
-            if (res && res._trace) {
-                currentTrace.children!.push(res._trace);
-                delete res._trace;
-            }
-            return res;
+          const res = await this._InternalExecute(nextFn, nextInput, [currentTrace], identity, frame, target, effectiveTraceId);
+          // After sub-call, we can extract the trace from the result if we want to build the tree
+          if (res && res._trace) {
+            currentTrace.children!.push(res._trace);
+            delete res._trace;
+          }
+          return res;
         },
         traceArray,
         identity,
@@ -388,10 +443,10 @@ export class Executor {
         effectiveTraceId,
         (name: string) => AdapterRegistry.Get(name),
         async (calls) => {
-          return await this._ParallelExecute(calls, traceArray, identity, frame, currentTrace, forceLocal, effectiveTraceId);
+          return await this._ParallelExecute(calls, traceArray, identity, frame, currentTrace, target, effectiveTraceId);
         }
       );
-      
+
       // Inject DB with identity for RLS
       ctx.db = {
         from: (table: string) => this.db!.from(table, identity)
@@ -407,14 +462,14 @@ export class Executor {
       });
 
       const result = await Promise.race([
-        source.type === "wasm" 
+        source.type === "wasm"
           ? this.wasmRuntime.run(source.content, ctx)
           : this.runtime.run(handler, ctx),
         timeoutPromise
       ]);
 
       if (timer) clearTimeout(timer);
-      
+
       // Cache: Store result for cacheable functions
       ChainboxCache.Set(fnName, input, result);
 
@@ -432,7 +487,7 @@ export class Executor {
       if (process.env.NODE_ENV === 'production' && !parentFrame) {
         // Delete all hidden metadata
         delete (finalResult as any)._trace;
-        
+
         // Return only the data specified by the function
         return result;
       }
@@ -452,7 +507,7 @@ export class Executor {
 
       // --- LIFECYCLE: FAILURE ---
       const normalized = await this.onFailure(fnName, error, identity, currentTrace, spanContext, parentFrame, startTime, effectiveTraceId);
-      
+
       throw normalized;
     }
   }
@@ -466,12 +521,13 @@ export class Executor {
     identity: Identity | undefined,
     frame: ExecutionFrame,
     currentFrame: TraceFrame,
-    forceLocal: boolean = false,
+    target: ExecutionTarget | boolean = false,
     traceId: string
   ): Promise<any[]> {
     const isRemoteNode = process.env.CHAINBOX_IS_NODE === "true";
 
     // 1. Planning phase
+    const forceLocal = target === true || target === "local";
     const tasks = calls.map((c, index) => {
       const plan = (forceLocal || isRemoteNode) ? { target: "local" as const } : ExecutionPlanner.Plan(c.fn, { _internal: { trace: parentTrace, frame } } as any);
       return { ...c, plan, index };

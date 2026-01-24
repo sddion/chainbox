@@ -54,9 +54,9 @@ export class ExecutionPlanner {
           const regexPattern = pattern.trim()
             .replace(/\./g, "\\.")
             .replace(/\*/g, ".*");
-          
+
           const nodeIds = nodeIdsStr.split("|").map(id => id.trim());
-          
+
           this.routes.push({
             pattern: new RegExp(`^${regexPattern}$`),
             nodeIds,
@@ -116,7 +116,7 @@ export class ExecutionPlanner {
     if (tenantPool) {
       const poolNodes = Array.from(this.nodes.values())
         .filter(n => n.id.startsWith(tenantPool) && n.healthy);
-      
+
       if (poolNodes.length > 0) {
         const selected = poolNodes[Math.floor(Math.random() * poolNodes.length)];
         return { target: "remote", nodeId: selected.url };

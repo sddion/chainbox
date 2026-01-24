@@ -1,5 +1,6 @@
 import { Identity } from "./Context";
-import { FileSystemStorage } from "./Storage";
+import { FileSystemStorage, MemoryStorage, StorageAdapter } from "./Storage";
+import { Env } from "./Env";
 
 /**
  * TenantConfig defines per-tenant resource limits and routing.
@@ -28,9 +29,9 @@ type TenantQuotaState = {
  */
 const DEFAULT_TENANT_CONFIG: TenantConfig = {
   tenantId: "default",
-  maxCallsPerMinute: parseInt(process.env.CHAINBOX_TENANT_DEFAULT_CALLS_PER_MIN || "1000"),
-  maxCallDepth: parseInt(process.env.CHAINBOX_TENANT_DEFAULT_MAX_DEPTH || "20"),
-  timeoutMs: parseInt(process.env.CHAINBOX_TENANT_DEFAULT_TIMEOUT_MS || "30000"),
+  maxCallsPerMinute: parseInt(Env.get("CHAINBOX_TENANT_DEFAULT_CALLS_PER_MIN", "1000")),
+  maxCallDepth: parseInt(Env.get("CHAINBOX_TENANT_DEFAULT_MAX_DEPTH", "20")),
+  timeoutMs: parseInt(Env.get("CHAINBOX_TENANT_DEFAULT_TIMEOUT_MS", "30000")),
   priority: 1,
 };
 
@@ -43,7 +44,7 @@ const DEFAULT_TENANT_CONFIG: TenantConfig = {
  */
 export class TenantManager {
   private static tenantConfigs: Map<string, TenantConfig> = new Map();
-  private static tenantQuotas = new FileSystemStorage("tenant_quotas");
+  private static tenantQuotas: StorageAdapter = (typeof process !== 'undefined' && process.versions && process.versions.node) ? new FileSystemStorage("tenant_quotas") : new MemoryStorage("tenant_quotas");
   private static initialized = false;
 
   /**
@@ -54,7 +55,7 @@ export class TenantManager {
     this.initialized = true;
 
     // Parse CHAINBOX_TENANT_CONFIGS: '[{"tenantId":"acme","maxCallsPerMinute":5000,...}]'
-    const configsEnv = process.env.CHAINBOX_TENANT_CONFIGS;
+    const configsEnv = Env.get("CHAINBOX_TENANT_CONFIGS");
     if (configsEnv) {
       try {
         const configs: TenantConfig[] = JSON.parse(configsEnv);

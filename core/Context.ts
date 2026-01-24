@@ -34,12 +34,12 @@ export type TraceFrame = {
   children?: TraceFrame[];
 };
 
-export type ChainboxErrorType = 
+export type ChainboxErrorType =
   | "EXECUTION_ERROR"
-  | "EXECUTION_TIMEOUT" 
+  | "EXECUTION_TIMEOUT"
   | "MAX_CALL_DEPTH_EXCEEDED"
   | "FORBIDDEN"
-  | "FUNCTION_NOT_FOUND" 
+  | "FUNCTION_NOT_FOUND"
   | "CIRCUIT_OPEN"
   | "MESH_CALL_FAILED"
   | "INVALID_SIGNATURE"
@@ -49,7 +49,7 @@ export type ChainboxErrorType =
 
 export class ChainboxError extends Error {
   public readonly isChainboxError = true;
-  
+
   constructor(
     public code: ChainboxErrorType,
     message: string,

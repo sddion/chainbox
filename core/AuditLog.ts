@@ -1,6 +1,7 @@
 import { Identity, TraceFrame } from "./Context";
-import fs from "fs";
-import path from "path";
+// Safe imports
+const fs = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('fs') : undefined;
+const path = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('path') : undefined;
 
 /**
  * AuditEntry represents a single audit log entry.
@@ -34,8 +35,8 @@ export class AuditLog {
 
   // Ensure log directory exists
   private static ensureLogDir() {
-    const dir = path.dirname(this.logFile);
-    if (!fs.existsSync(dir)) {
+    const dir = path ? path.dirname(this.logFile) : "";
+    if (dir && fs && !fs.existsSync(dir)) {
       try { fs.mkdirSync(dir, { recursive: true }); } catch {}
     }
   }
@@ -67,8 +68,11 @@ export class AuditLog {
     console.log(jsonLog);
 
     // Persist to local file for CLI inspection
-    this.ensureLogDir();
-    fs.appendFile(this.logFile, jsonLog + "\n", () => {});
+    // Persist to local file for CLI inspection
+    if (fs) {
+        this.ensureLogDir();
+        fs.appendFile(this.logFile, jsonLog + "\n", () => {});
+    }
 
   }
 

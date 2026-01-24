@@ -1,4 +1,16 @@
-import { randomBytes } from "crypto";
+// Isomorphic crypto for ID generation
+const crypto = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('crypto') : undefined;
+
+const randomBytes = (size: number): Buffer | Uint8Array => {
+    if (crypto) return crypto.randomBytes(size);
+    if (typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.getRandomValues) {
+        return globalThis.crypto.getRandomValues(new Uint8Array(size));
+    }
+    // Fallback (insecure but non-crashing)
+    const arr = new Uint8Array(size);
+    for (let i=0; i<size; i++) arr[i] = Math.floor(Math.random() * 256);
+    return arr;
+};
 
 /**
  * Chainbox Telemetry - OpenTelemetry-compatible observability.
@@ -49,7 +61,8 @@ type SpanRecord = {
  * Generate a random trace/span ID.
  */
 function generateId(length: number = 16): string {
-  return randomBytes(length / 2).toString("hex");
+  const bytes = randomBytes(length / 2);
+  return Buffer.from(bytes).toString("hex");
 }
 
 /**

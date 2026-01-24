@@ -1,7 +1,7 @@
 {
   "name": "@sddion/chainbox",
-  "version": "1.0.6",
-  "description": "Execution-first backend framework for Next.js",
+  "version": "1.0.7",
+  "description": "Execution-first backend framework",
   "license": "MIT",
   "repository": {
     "type": "git",

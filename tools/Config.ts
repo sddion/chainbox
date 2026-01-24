@@ -1,6 +1,6 @@
-import { createJiti } from "jiti";
-import path from "path";
-import fs from "fs";
+// Safe imports
+const path = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('path') : undefined;
+const fs = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('fs') : undefined;
 
 export interface ChainboxConfig {
   /**
@@ -29,13 +29,16 @@ export function Config(config: ChainboxConfig): ChainboxConfig {
 }
 
 export async function loadConfig(cwd: string = process.cwd()): Promise<ChainboxConfig> {
-  // Support .ts, .js
+  // Support .ts, .js for Node.js environments only
+  if (!fs || !path) return defaultConfig;
+
   const files = ["chainbox.config.ts", "chainbox.config.js"];
   
   for (const file of files) {
     const filePath = path.join(cwd, file);
     if (fs.existsSync(filePath)) {
       try {
+        const { createJiti } = require("jiti");
         const jiti = createJiti(__filename);
         const mod = await jiti.import(filePath, { default: true }) as any;
         // Merge with defaults

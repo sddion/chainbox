@@ -1,4 +1,4 @@
-import crypto from "crypto";
+const crypto = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('crypto') : undefined;
 
 /**
  * RequestSigner provides HMAC-SHA256 signing for mesh communication.
@@ -27,7 +27,7 @@ export class RequestSigner {
    * Sign a payload with timestamp.
    */
   public static Sign(payload: any): { signature: string; timestamp: number } {
-    if (!this.secret) {
+    if (!this.secret || !crypto) {
       return { signature: "", timestamp: Date.now() };
     }
 
@@ -49,8 +49,8 @@ export class RequestSigner {
     signature: string,
     timestamp: number
   ): { valid: boolean; error?: string } {
-    if (!this.secret) {
-      return { valid: true }; // No secret = no verification required
+    if (!this.secret || !crypto) {
+      return { valid: true }; // No secret or no crypto = no verification required (or fails open in client/native)
     }
 
     // Check timestamp freshness

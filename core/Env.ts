@@ -1,17 +1,51 @@
-import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
+// Safe imports
+const fs = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('fs') : undefined;
+const path = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('path') : undefined;
 
-// Load .env files if they exist
-const envFiles = [".env", ".env.local", ".env.development", ".env.production"];
-for (const file of envFiles) {
-  const envPath = path.resolve(process.cwd(), file);
-  if (fs.existsSync(envPath)) {
-    dotenv.config({ path: envPath });
+// Lazy load dotenv only in Node
+if (fs && path) {
+  try {
+      const dotenv = require("dotenv");
+      const envFiles = [".env", ".env.local", ".env.development", ".env.production"];
+      for (const file of envFiles) {
+        const envPath = path.resolve(process.cwd(), file);
+        if (fs.existsSync(envPath)) {
+          dotenv.config({ path: envPath });
+        }
+      }
+  } catch (e) {
+      // Ignore dotenv errors (e.g. if module missing in prod bundle)
   }
 }
 
 export class Env {
+  /**
+    * Platform-agnostic environment variable getter.
+    * Supports Node.js process.env, Expo Constants, and React Native Config.
+    */
+  public static get(key: string, defaultValue: string = ""): string {
+      // 1. Node.js / Process
+      if (typeof process !== 'undefined' && process.env && process.env[key]) {
+          return process.env[key]!;
+      }
+      
+      // 2. Expo (via global or module) - simplified check
+      // @ts-ignore
+      if (typeof Expo !== 'undefined' && Expo.Constants?.manifest?.extra?.[key]) {
+           // @ts-ignore
+          return Expo.Constants.manifest.extra[key];
+      }
+
+      // 3. React Native Config (global.Config injected or similar)
+      // @ts-ignore
+      if (typeof Config !== 'undefined' && Config[key]) {
+           // @ts-ignore
+          return Config[key];
+      }
+
+      return defaultValue;
+  }
+
   public static DetectSupabaseConfig(): { url: string; key: string } {
     const env = process.env;
     let url = "";

@@ -1,5 +1,6 @@
-import fs from "fs";
-import path from "path";
+// Safe imports for Node.js only
+const fs = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('fs') : undefined;
+const path = (typeof process !== 'undefined' && process.versions && process.versions.node) ? require('path') : undefined;
 import { Telemetry } from "./Telemetry";
 
 /**
@@ -22,16 +23,22 @@ export class FileSystemStorage implements StorageAdapter {
 
   constructor(scope: string) {
     this.scope = scope;
-    this.baseDir = path.join(process.cwd(), ".chainbox", "data", scope);
-    if (!fs.existsSync(this.baseDir)) {
-      fs.mkdirSync(this.baseDir, { recursive: true });
+    if (path && fs) {
+        this.baseDir = path.join(process.cwd(), ".chainbox", "data", scope);
+        if (!fs.existsSync(this.baseDir)) {
+          fs.mkdirSync(this.baseDir, { recursive: true });
+        }
+    } else {
+        // Fallback or error? For now, we allow it but methods will fail or be no-ops.
+        // In a real app, FileSystemStorage shouldn't be used in RN.
+        this.baseDir = "";
     }
   }
 
   public async get(key: string): Promise<any> {
     const startTime = Date.now();
     const filePath = this.getPath(key);
-    if (!fs.existsSync(filePath)) {
+    if (!fs || !fs.existsSync(filePath)) {
       Telemetry.IncrementCounter("chainbox_storage_miss_total", { scope: this.scope, operation: "get" });
       return null;
     }
@@ -47,6 +54,7 @@ export class FileSystemStorage implements StorageAdapter {
   }
 
   public async set(key: string, value: any): Promise<void> {
+    if (!fs) return;
     const startTime = Date.now();
     const filePath = this.getPath(key);
     fs.writeFileSync(filePath, JSON.stringify(value, null, 2));
@@ -55,18 +63,52 @@ export class FileSystemStorage implements StorageAdapter {
   }
 
   public async delete(key: string): Promise<void> {
+    if (!fs) return;
     const filePath = this.getPath(key);
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
   }
 
   public async list(prefix: string = ""): Promise<string[]> {
-    if (!fs.existsSync(this.baseDir)) return [];
-    return fs.readdirSync(this.baseDir)
-      .map(f => decodeURIComponent(f))
-      .filter(k => k.startsWith(prefix));
+    if (!fs || !fs.existsSync(this.baseDir)) return [];
+    const files: string[] = fs.readdirSync(this.baseDir);
+    return files
+      .map((f: string) => decodeURIComponent(f))
+      .filter((k: string) => k.startsWith(prefix));
   }
 
   private getPath(key: string): string {
     return path.join(this.baseDir, encodeURIComponent(key));
+  }
+}
+
+/**
+ * MemoryStorage for non-persistent environments (like React Native / Client).
+ */
+export class MemoryStorage implements StorageAdapter {
+  private store = new Map<string, any>();
+
+  constructor(private scope: string) {}
+
+  public async get(key: string): Promise<any> {
+      const val = this.store.get(key);
+      if (val) {
+          Telemetry.IncrementCounter("chainbox_storage_hits_total", { scope: this.scope, operation: "get" });
+          return JSON.parse(val); // Clone
+      }
+      Telemetry.IncrementCounter("chainbox_storage_miss_total", { scope: this.scope, operation: "get" });
+      return null;
+  }
+
+  public async set(key: string, value: any): Promise<void> {
+      this.store.set(key, JSON.stringify(value));
+      Telemetry.IncrementCounter("chainbox_storage_ops_total", { scope: this.scope, operation: "set" });
+  }
+
+  public async delete(key: string): Promise<void> {
+      this.store.delete(key);
+  }
+
+  public async list(prefix: string = ""): Promise<string[]> {
+      return Array.from(this.store.keys()).filter(k => k.startsWith(prefix));
   }
 }

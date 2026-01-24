@@ -33,8 +33,24 @@ export class SupabaseAdapter implements IDbAdapter {
   }
 
   public from(table: string, identity?: Identity) {
+
     if (!this.client) {
-      const { createClient } = require("@supabase/supabase-js");
+      // Safe require for Node, or global check for RN if injected
+      let createClient: any;
+      try {
+           // @ts-ignore
+           if (typeof SupabaseClient !== 'undefined') {
+              // @ts-ignore
+              createClient = SupabaseClient; 
+           } else {
+               // Dynamic require inside try-catch is usually handled by bundlers (e.g. Metro) as a split point, 
+               // but to be safe we should rely on standard import if possible or the user passing the client.
+               createClient = require("@supabase/supabase-js").createClient;
+           }
+      } catch (e) {
+          throw new Error("SUPABASE_JS_NOT_FOUND: Install @supabase/supabase-js");
+      }
+
       this.client = createClient(this.credentials.url!, this.credentials.secretKey!, {
         auth: { persistSession: false, autoRefreshToken: false },
       });
